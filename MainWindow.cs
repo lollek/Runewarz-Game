@@ -44,17 +44,17 @@ namespace RuneWarz
             this.Controls.Add(this.TitleBar);
             this.Controls.Add(this.GUIPanel);
 
-            this.MouseDown += new MouseEventHandler(HandleMouseDown);
-            this.GamePanel.MouseDown += new MouseEventHandler(HandleMouseDown);
-            this.TitleBar.MouseDown += new MouseEventHandler(HandleMouseDown);
-            this.GUIPanel.MouseDown += new MouseEventHandler(HandleMouseDown);
+            this.MouseDown += HandleMouseDown;
+            this.GamePanel.MouseDown += HandleMouseDown;
+            this.TitleBar.MouseDown += HandleMouseDown;
+            this.GUIPanel.MouseDown += HandleMouseDown;
 
-            this.GUIPanel.NewGameButton.MouseClick += new MouseEventHandler(HandleMouseClick);
-            this.GUIPanel.LoadGameButton.MouseClick += new MouseEventHandler(HandleMouseClick);
-            this.GUIPanel.QuitButton.MouseClick += new MouseEventHandler(HandleMouseClick);
+            this.GUIPanel.NewGameButton.MouseClick += HandleMouseClick;
+            this.GUIPanel.LoadGameButton.MouseClick += HandleMouseClick;
+            this.GUIPanel.QuitButton.MouseClick += HandleMouseClick;
 
             this.KeyPreview = true;
-            this.KeyDown += new KeyEventHandler(HandleKeyPress);
+            this.KeyDown += HandleKeyPress;
 
             this.ResumeLayout(false);
             this.PerformLayout();

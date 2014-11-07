@@ -60,7 +60,6 @@ namespace RuneWarz.Game
             for (int y = 0; y < BOARD_HEIGHT; ++y)
                 for (int x = 0; x < board1[y].Length; ++x)
                 {
-                    bool GoToNextY = false;
                     switch(board1[y][x])
                     {
                         case '#': 
@@ -69,13 +68,7 @@ namespace RuneWarz.Game
                         case '@':
                             GameTiles[y * BOARD_WIDTH + x] = new Tile(RandomNumberGenerator.Next(Game.Tile.NUM_COLORS) + 1);
                             break;
-                        case '\r': 
-                        case '\n': 
-                            GoToNextY = true;
-                            break;
                     }
-                    if (GoToNextY)
-                        break;
                 }
         }
     }
