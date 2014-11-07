@@ -38,6 +38,7 @@ namespace RuneWarz.Game
             ,"            #####   #####   #####"};
 
         public Tile[] GameTiles;
+        public Player[] Players;
         Random RandomNumberGenerator;
 
         public Board()
@@ -52,9 +53,10 @@ namespace RuneWarz.Game
         /// @ becomes players (played tiles)
         /// The rest becomes unplayable tiles, and are invisible
         /// </summary>
-        private void Contructor_MakeBoard()
+        void Contructor_MakeBoard()
         {
             this.GameTiles = new Tile[BOARD_WIDTH * BOARD_HEIGHT];
+            Players = new Player[Game.Player.MAX_PLAYERS];
             System.Diagnostics.Debug.WriteLine(board1);
 
             for (int y = 0; y < BOARD_HEIGHT; ++y)
@@ -63,12 +65,24 @@ namespace RuneWarz.Game
                     switch(board1[y][x])
                     {
                         case '#': 
-                            GameTiles[y * BOARD_WIDTH + x] = new Tile(RandomNumberGenerator.Next(Game.Tile.NUM_COLORS) +1);
-                            break;
-                        case '@':
                             GameTiles[y * BOARD_WIDTH + x] = new Tile(RandomNumberGenerator.Next(Game.Tile.NUM_COLORS) + 1);
                             break;
+                        case '@': AddNewPlayer(x, y); break; 
                     }
+                }
+        }
+
+        void AddNewPlayer(int x, int y)
+        {
+            Tile Tile = new Tile(RandomNumberGenerator.Next(Game.Tile.NUM_COLORS) + 1);
+            this.GameTiles[y * BOARD_WIDTH + x] = Tile;
+
+            for (int i = 0; i < Game.Player.MAX_PLAYERS; ++i)
+                if (Players[i] == null)
+                {
+                    Players[i] = new Player(Tile.Color);
+                    Tile.Owner = i;
+                    return;
                 }
         }
     }

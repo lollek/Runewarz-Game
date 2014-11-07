@@ -16,11 +16,14 @@ namespace RuneWarz.Game
         public const int TILE_TYPE_PLA4 = 5;
         public const int NUM_COLORS = 6;
         public const int TILE_SIZE = 15;
+
         public int Color;
+        public int Owner;
 
         public Tile(int color)
         {
             this.Color = color;
+            this.Owner = -1;
         }
     }
 }

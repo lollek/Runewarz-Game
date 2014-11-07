@@ -68,10 +68,11 @@ namespace RuneWarz
                     Game.Tile tile = this.GameMap.GameTiles[x + y * this.GameMap.BOARD_WIDTH];
                     if (tile == null)
                         continue;
-                    Paint_Tile(tile, x, y, Game.Tile.TILE_TYPE_NONE, e);
-                    if (tile.Color == CurrentHoverColor)
+                    if (tile.Owner != -1)
+                        Paint_Tile(tile, x, y, Game.Tile.TILE_TYPE_PLA1 + tile.Owner, e);
+                    else if (tile.Color == CurrentHoverColor && HasPlayerNeighbourTile(x, y, Game.Player.PLAYER_HUMAN))
                         Paint_Tile(tile, x, y, Game.Tile.TILE_TYPE_PLA1, e);
-                    else if (tile.Color == LastHoverColor)
+                    else
                         Paint_Tile(tile, x, y, Game.Tile.TILE_TYPE_NONE, e);
                 }
         }
@@ -82,6 +83,36 @@ namespace RuneWarz
             Rectangle source = new Rectangle(tile.Color * tile_size, imageType * tile_size, tile_size, tile_size);
             Rectangle destination = new Rectangle(Offset_X + x * tile_size, Offset_Y + y * tile_size, tile_size, tile_size);
             e.Graphics.DrawImage(this.Tiles, destination, source, GraphicsUnit.Pixel);
+        }
+
+        bool HasPlayerNeighbourTile(int x, int y, int Player)
+        {
+            if (x > 0)
+            {
+                Game.Tile Tile = this.GameMap.GameTiles[x - 1 + y * this.GameMap.BOARD_WIDTH];
+                if (Tile != null && Tile.Owner == Player)
+                    return true;
+            }
+            if (x < this.GameMap.BOARD_WIDTH -1)
+            {
+                Game.Tile Tile = this.GameMap.GameTiles[x + 1 + y * this.GameMap.BOARD_WIDTH];
+                if (Tile != null && Tile.Owner == Player)
+                    return true;
+            }
+
+            if (y > 0)
+            {
+                Game.Tile Tile = this.GameMap.GameTiles[x + (y - 1) * this.GameMap.BOARD_WIDTH];
+                if (Tile != null && Tile.Owner == Player)
+                    return true;
+            }
+            if (y < this.GameMap.BOARD_HEIGHT - 1)
+            {
+                Game.Tile Tile = this.GameMap.GameTiles[x + (y + 1) * this.GameMap.BOARD_WIDTH];
+                if (Tile != null && Tile.Owner == Player)
+                    return true;
+            }
+            return false;
         }
     }
 }
