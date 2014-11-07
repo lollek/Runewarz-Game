@@ -38,13 +38,14 @@ namespace RuneWarz
 
             this.AutoScaleDimensions = new SizeF(6F, 13F);
             this.AutoScaleMode = AutoScaleMode.Font;
-            this.ClientSize = new Size(800, 620);
+            this.ClientSize = new Size(800, 630);
             this.ControlBox = false;
             this.Controls.Add(this.GamePanel);
             this.Controls.Add(this.TitleBar);
             this.Controls.Add(this.GUIPanel);
 
             this.MouseDown += new MouseEventHandler(HandleMouseDown);
+            this.GamePanel.MouseDown += new MouseEventHandler(HandleMouseDown);
             this.TitleBar.MouseDown += new MouseEventHandler(HandleMouseDown);
             this.GUIPanel.MouseDown += new MouseEventHandler(HandleMouseDown);
 

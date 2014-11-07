@@ -32,8 +32,10 @@ namespace RuneWarz
             this.Controls.Add(this.NewGameButton, 1, 1);
             this.Controls.Add(this.LoadGameButton, 1, 2);
             this.Controls.Add(this.QuitButton, 1, 4);
-            this.Location = new Point(0, 20);
+            this.Location = new Point(0, 30);
             this.Name = "GUIPanel";
+            this.ForeColor = Color.White;
+            this.BackColor = Color.Black;
             this.RowCount = 6;
             this.RowStyles.Add(new RowStyle(SizeType.Percent, 33.33555F));
             this.RowStyles.Add(new RowStyle(SizeType.Percent, 10.00067F));

@@ -47,7 +47,7 @@
     <Compile Include="GamePanel.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Game\Map.cs" />
+    <Compile Include="Game\Board.cs" />
     <Compile Include="Game\Tile.cs" />
     <Compile Include="MainMenu.cs">
       <SubType>Component</SubType>
@@ -85,7 +85,9 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="tiles.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

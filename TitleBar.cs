@@ -26,7 +26,9 @@ namespace RuneWarz
             this.Anchor = ((AnchorStyles)((AnchorStyles.Top)));
             this.Location = new Point(0, 0);
             this.Name = "TitleBar";
-            this.Size = new System.Drawing.Size(800, 20);
+            this.ForeColor = Color.White;
+            this.BackColor = Color.Black;
+            this.Size = new System.Drawing.Size(800, 30);
             this.Controls.Add(Title);
             this.Controls.Add(IconClose);
             this.Controls.Add(IconMinimize);

@@ -8,39 +8,41 @@ namespace RuneWarz.Game
 {
     class Board
     {
-        const int BOARD_WIDTH = 45;
-        const int BOARD_HEIGHT = 25;
-        const String board1 =
-@"
-            #####   #####   #####
-            #####   #####   #####
- @##########################################
- #            #       #       #            #
- #            #       #       #            #
- #            #       #       #            #
-#######    ####### ####### #######    #######
-################## ####### #######    #######
-#######    ####### ####### #######    #######
-#######    ####### ####### #######    #######
-#######    ####### ####### #######    #######
-#######    ####### ####### #######    #######
-#######    ####### ####### #######    #######
-#######    ####### ####### #######    #######
-#######    ####### ####### #######    #######
-#######    ####### ####### #######    #######
-#######    ####### ####### #######    #######
-#######    ####### ####### ##################
-#######    ####### ####### #######    #######
- #            #       #       #            #
- #            #       #       #            #
- #            #       #       #            #
- ##########################################@
-            #####   #####   #####
-            #####   #####   #####";
-        Tile[] GameTiles;
+        public int BOARD_WIDTH = 45;
+        public int BOARD_HEIGHT = 25;
+        string[] board1 = new string[] { 
+             "            #####   #####   #####"
+            ,"            #####   #####   #####"
+            ," @##########################################"
+            ," #            #       #       #            #"
+            ," #            #       #       #            #"
+            ," #            #       #       #            #"
+            ,"#######    ####### ####### #######    #######"
+            ,"################## ####### #######    #######"
+            ,"#######    ####### ####### #######    #######"
+            ,"#######    ####### ####### #######    #######"
+            ,"#######    ####### ####### #######    #######"
+            ,"#######    ####### ####### #######    #######"
+            ,"#######    ####### ####### #######    #######"
+            ,"#######    ####### ####### #######    #######"
+            ,"#######    ####### ####### #######    #######"
+            ,"#######    ####### ####### #######    #######"
+            ,"#######    ####### ####### #######    #######"
+            ,"#######    ####### ####### ##################"
+            ,"#######    ####### ####### #######    #######"
+            ," #            #       #       #            #"
+            ," #            #       #       #            #"
+            ," #            #       #       #            #"
+            ," ##########################################@"
+            ,"            #####   #####   #####"
+            ,"            #####   #####   #####"};
+
+        public Tile[] GameTiles;
+        Random RandomNumberGenerator;
 
         public Board()
         {
+            RandomNumberGenerator = new Random();
             Contructor_MakeBoard();
         }
 
@@ -53,19 +55,20 @@ namespace RuneWarz.Game
         private void Contructor_MakeBoard()
         {
             this.GameTiles = new Tile[BOARD_WIDTH * BOARD_HEIGHT];
+            System.Diagnostics.Debug.WriteLine(board1);
 
             for (int y = 0; y < BOARD_HEIGHT; ++y)
             {
-                for (int x = 0; x < BOARD_WIDTH; ++x)
+                for (int x = 0; x < board1[y].Length; ++x)
                 {
                     bool GoToNextY = false;
-                    switch(board1[y * BOARD_WIDTH + x])
+                    switch(board1[y][x])
                     {
                         case '#': 
-                            GameTiles[y * BOARD_WIDTH + x] = new Tile();
+                            GameTiles[y * BOARD_WIDTH + x] = new Tile(RandomNumberGenerator.Next(Game.Tile.NUM_COLORS) +1);
                             break;
-                        case '@': 
-                            GameTiles[y * BOARD_WIDTH + x] = new Tile();
+                        case '@':
+                            GameTiles[y * BOARD_WIDTH + x] = new Tile(RandomNumberGenerator.Next(Game.Tile.NUM_COLORS) + 1);
                             break;
                         case '\r': 
                         case '\n': 
