@@ -51,11 +51,13 @@ namespace RuneWarz
 
             this.GUIPanel.NewGameButton.MouseClick += new MouseEventHandler(HandleMouseClick);
             this.GUIPanel.LoadGameButton.MouseClick += new MouseEventHandler(HandleMouseClick);
-            this.GUIPanel.QuitButton.MouseClick += new MouseEventHandler(HandleMouseClick);        
+            this.GUIPanel.QuitButton.MouseClick += new MouseEventHandler(HandleMouseClick);
+
+            this.KeyPreview = true;
+            this.KeyDown += new KeyEventHandler(HandleKeyPress);
 
             this.ResumeLayout(false);
             this.PerformLayout();
-
         }
 
         private void HandleMouseClick(object sender, MouseEventArgs e)
@@ -80,10 +82,21 @@ namespace RuneWarz
                 // SendMessage() Sends a custom event that we hand craft, 
                 //  in this case it's a MouseDown event on the Title Bar (which is hidden)
                 const int WM_NCLBUTTONDOWN = 0x00A1; // User MouseDown Event
-                const int HT_CAPTION = 0x0002;       // Title Bar
+                const int HTCAPTION = 0x0002;        // Title Bar
                 ReleaseCapture();
-                SendMessage(Handle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
+                SendMessage(Handle, WM_NCLBUTTONDOWN, HTCAPTION, 0);
             }
         }
+
+        private void HandleKeyPress(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Escape)
+            {
+                
+                this.GamePanel.Visible = false;
+                this.GUIPanel.Visible = true;
+            }
+        }
+
     }
 }
