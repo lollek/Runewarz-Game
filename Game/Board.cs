@@ -58,7 +58,6 @@ namespace RuneWarz.Game
             System.Diagnostics.Debug.WriteLine(board1);
 
             for (int y = 0; y < BOARD_HEIGHT; ++y)
-            {
                 for (int x = 0; x < board1[y].Length; ++x)
                 {
                     bool GoToNextY = false;
@@ -76,11 +75,8 @@ namespace RuneWarz.Game
                             break;
                     }
                     if (GoToNextY)
-                    {
                         break;
-                    }
                 }
-            }
         }
     }
 }

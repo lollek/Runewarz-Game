@@ -69,9 +69,7 @@ namespace RuneWarz
                 this.GamePanel.StartNewGame();
             }
             else if (sender.Equals(this.GUIPanel.QuitButton))
-            {
                 Application.Exit();
-            }
         }
 
         private void HandleMouseDown(object sender, MouseEventArgs e)
@@ -92,7 +90,6 @@ namespace RuneWarz
         {
             if (e.KeyCode == Keys.Escape)
             {
-                
                 this.GamePanel.Visible = false;
                 this.GUIPanel.Visible = true;
             }
