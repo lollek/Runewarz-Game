@@ -19,42 +19,61 @@ namespace RuneWarz
         [DllImportAttribute("user32.dll")]
         public static extern bool ReleaseCapture();
 
+        private GamePanel GamePanel;
+        private TitleBar TitleBar;
+        private MainMenu GUIPanel;
+
         public Runewarz()
         {
-            InitializeComponent();
-        }
+            this.GamePanel = new GamePanel();
+            this.TitleBar = new TitleBar(this);
+            this.GUIPanel = new MainMenu();
+            this.SuspendLayout();
 
-        private void tableLayoutPanel1_Paint(object sender, PaintEventArgs e)
-        {
+            this.AccessibleName = "Runewarz";
+            this.Name = "Runewarz";
+            this.FormBorderStyle = FormBorderStyle.None;
+            this.ShowIcon = false;
+            this.Text = "Runewarz";
 
-        }
+            this.AutoScaleDimensions = new SizeF(6F, 13F);
+            this.AutoScaleMode = AutoScaleMode.Font;
+            this.ClientSize = new Size(800, 620);
+            this.ControlBox = false;
+            this.Controls.Add(this.GamePanel);
+            this.Controls.Add(this.TitleBar);
+            this.Controls.Add(this.GUIPanel);
 
-        private void HandleMouseEnter(object sender, EventArgs e)
-        {
-            ((Label)sender).BackColor = Color.Orange;
-        }
+            this.MouseDown += new MouseEventHandler(HandleMouseDown);
+            this.TitleBar.MouseDown += new MouseEventHandler(HandleMouseDown);
+            this.GUIPanel.MouseDown += new MouseEventHandler(HandleMouseDown);
 
-        private void HandleMouseLeave(object sender, EventArgs e)
-        {
-            ((Label)sender).BackColor = default(Color);
+            this.GUIPanel.NewGameButton.MouseClick += new MouseEventHandler(HandleMouseClick);
+            this.GUIPanel.LoadGameButton.MouseClick += new MouseEventHandler(HandleMouseClick);
+            this.GUIPanel.QuitButton.MouseClick += new MouseEventHandler(HandleMouseClick);        
+
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
         }
 
         private void HandleMouseClick(object sender, MouseEventArgs e)
         {
-            if (sender.Equals(this.IconClose) || sender.Equals(this.QuitButton))
+            if (sender.Equals(this.GUIPanel.NewGameButton))
+            {
+                this.GUIPanel.Visible = false;
+                this.GamePanel.Visible = true;
+                this.GamePanel.StartNewGame();
+            }
+            else if (sender.Equals(this.GUIPanel.QuitButton))
             {
                 Application.Exit();
-            }
-            else if (sender.Equals(this.IconMinimize))
-            {
-                this.WindowState = FormWindowState.Minimized;
             }
         }
 
         private void HandleMouseDown(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left)
-            {
+            if (e.Button == MouseButtons.Left)            {
                 // Drag the window while holding down the left mouse button
                 // ReleaseCapture() releases the Window's control of the mouse
                 // SendMessage() Sends a custom event that we hand craft, 
