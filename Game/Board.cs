@@ -39,13 +39,8 @@ namespace RuneWarz.Game
 
         public Tile[] GameTiles;
         public Player[] Players;
+        public int NumPlayers;
         Random RandomNumberGenerator;
-
-        public Board()
-        {
-            RandomNumberGenerator = new Random();
-            Contructor_MakeBoard();
-        }
 
         /// <summary>
         /// Make a game board from a string.
@@ -53,37 +48,46 @@ namespace RuneWarz.Game
         /// @ becomes players (played tiles)
         /// The rest becomes unplayable tiles, and are invisible
         /// </summary>
-        void Contructor_MakeBoard()
+        public Board()
         {
+            this.RandomNumberGenerator = new Random();
             this.GameTiles = new Tile[BOARD_WIDTH * BOARD_HEIGHT];
-            Players = new Player[Game.Player.MAX_PLAYERS];
-            System.Diagnostics.Debug.WriteLine(board1);
+            this.Players = new Player[Game.Player.MAX_PLAYERS];
+            this.NumPlayers = 0;
 
             for (int y = 0; y < BOARD_HEIGHT; ++y)
                 for (int x = 0; x < board1[y].Length; ++x)
                 {
-                    switch(board1[y][x])
+                    switch (board1[y][x])
                     {
-                        case '#': 
-                            GameTiles[y * BOARD_WIDTH + x] = new Tile(RandomNumberGenerator.Next(Game.Tile.NUM_COLORS) + 1);
-                            break;
-                        case '@': AddNewPlayer(x, y); break; 
+                        case '#': AddNewTile(x, y); break;
+                        case '@': AddNewPlayer(x, y); break;
                     }
                 }
         }
 
+        public void CaptureTile(int Player, int x, int y)
+        {
+            Tile Tile = this.GameTiles[x + y * this.BOARD_WIDTH];
+            Tile.Owner = Player;
+            Tile.Color = this.Players[Player].Color;
+        }
+
+        void AddNewTile(int x, int y)
+        {
+            GameTiles[y * BOARD_WIDTH + x] = new Tile(RandomNumberGenerator.Next(Game.Tile.NUM_COLORS) + 1);
+        }
+
         void AddNewPlayer(int x, int y)
         {
-            Tile Tile = new Tile(RandomNumberGenerator.Next(Game.Tile.NUM_COLORS) + 1);
-            this.GameTiles[y * BOARD_WIDTH + x] = Tile;
+            AddNewTile(x, y);
+            Tile Tile = this.GameTiles[y * BOARD_WIDTH + x];
 
-            for (int i = 0; i < Game.Player.MAX_PLAYERS; ++i)
-                if (Players[i] == null)
-                {
-                    Players[i] = new Player(Tile.Color);
-                    Tile.Owner = i;
-                    return;
-                }
+            this.Players[this.NumPlayers] = new Player(Tile.Color);
+            Tile.Owner = this.NumPlayers;
+            this.NumPlayers++;
         }
+
+
     }
 }

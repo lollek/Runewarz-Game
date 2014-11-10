@@ -39,6 +39,17 @@ namespace RuneWarz
             this.GameMap = new Game.Board();
             this.Offset_X = (800 - (this.GameMap.BOARD_WIDTH * Game.Tile.TILE_SIZE)) / 2;
             this.Offset_Y = (600 - (this.GameMap.BOARD_HEIGHT * Game.Tile.TILE_SIZE)) / 2;
+
+            // Each player automatically captures all nearby tiles of the game color
+            for (int player = 0; player < this.GameMap.NumPlayers; ++player)
+            {
+                CurrentHoverColor = this.GameMap.Players[player].Color;
+                HashSet<Tuple<int, int>> Capturables = FindCurrentHoverTiles(player);
+                foreach (var tile in Capturables)
+                    this.GameMap.CaptureTile(player, tile.Item1, tile.Item2);
+            }
+            CurrentHoverColor = -1;
+            this.Invalidate();
         }
 
         void GamePanel_MouseMove(object sender, MouseEventArgs e)
@@ -80,17 +91,7 @@ namespace RuneWarz
                 return;
 
             /* Second iteration - Print hover */
-            HashSet<Tuple<int, int>> HoverTiles = new HashSet<Tuple<int,int>>();
-            for (int y = 0; y < this.GameMap.BOARD_HEIGHT; ++y)
-                for (int x = 0; x < this.GameMap.BOARD_WIDTH; ++x)
-                {
-                    Game.Tile tile = this.GameMap.GameTiles[x + y * this.GameMap.BOARD_WIDTH];
-                    if (tile == null)
-                        continue;
-                    else if (tile.Owner == Game.Player.PLAYER_HUMAN)
-                        AddHoverTiles(HoverTiles, x, y);
-                }
-
+            HashSet<Tuple<int, int>> HoverTiles = FindCurrentHoverTiles(Game.Player.PLAYER_HUMAN);
             foreach (var tile in HoverTiles)
                 Paint_Tile(this.GameMap.GameTiles[tile.Item1 + tile.Item2 * this.GameMap.BOARD_WIDTH], 
                            tile.Item1, tile.Item2, Game.Tile.TILE_TYPE_PLA1, e);
@@ -102,6 +103,21 @@ namespace RuneWarz
             Rectangle source = new Rectangle(tile.Color * tile_size, imageType * tile_size, tile_size, tile_size);
             Rectangle destination = new Rectangle(Offset_X + x * tile_size, Offset_Y + y * tile_size, tile_size, tile_size);
             e.Graphics.DrawImage(this.Tiles, destination, source, GraphicsUnit.Pixel);
+        }
+
+        HashSet<Tuple<int, int>> FindCurrentHoverTiles(int Player)
+        {
+            HashSet<Tuple<int, int>> HoverTiles = new HashSet<Tuple<int, int>>();
+            for (int y = 0; y < this.GameMap.BOARD_HEIGHT; ++y)
+                for (int x = 0; x < this.GameMap.BOARD_WIDTH; ++x)
+                {
+                    Game.Tile tile = this.GameMap.GameTiles[x + y * this.GameMap.BOARD_WIDTH];
+                    if (tile == null)
+                        continue;
+                    else if (tile.Owner == Player)
+                        AddHoverTiles(HoverTiles, x, y);
+                }
+            return HoverTiles;
         }
 
         void AddHoverTiles(HashSet<Tuple<int, int>> hoverTiles, int x, int y)
