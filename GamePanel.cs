@@ -43,12 +43,11 @@ namespace RuneWarz
             // Each player automatically captures all nearby tiles of the game color
             for (int player = 0; player < this.GameMap.NumPlayers; ++player)
             {
-                CurrentHoverColor = this.GameMap.Players[player].Color;
-                HashSet<Tuple<int, int>> Capturables = FindCurrentHoverTiles(player);
+                HashSet<Tuple<int, int>> Capturables = 
+                    this.GameMap.FindCapturableTiles(player, this.GameMap.Players[player].Color);
                 foreach (var tile in Capturables)
                     this.GameMap.CaptureTile(player, tile.Item1, tile.Item2);
             }
-            CurrentHoverColor = -1;
             this.Invalidate();
         }
 
@@ -91,10 +90,16 @@ namespace RuneWarz
                 return;
 
             /* Second iteration - Print hover */
-            HashSet<Tuple<int, int>> HoverTiles = FindCurrentHoverTiles(Game.Player.PLAYER_HUMAN);
+            int Print_Tile_Type = Game.Tile.TILE_TYPE_PLA1;
+            for (int i = 0; i < this.GameMap.NumPlayers; ++i)
+                if (this.GameMap.Players[i].Color == CurrentHoverColor)
+                    Print_Tile_Type = Game.Tile.TILE_TYPE_LOCK;
+
+            HashSet<Tuple<int, int>> HoverTiles = 
+                this.GameMap.FindCapturableTiles(Game.Player.PLAYER_HUMAN, CurrentHoverColor);
             foreach (var tile in HoverTiles)
                 Paint_Tile(this.GameMap.GameTiles[tile.Item1 + tile.Item2 * this.GameMap.BOARD_WIDTH], 
-                           tile.Item1, tile.Item2, Game.Tile.TILE_TYPE_PLA1, e);
+                           tile.Item1, tile.Item2, Print_Tile_Type, e);
         }
 
         void Paint_Tile(Game.Tile tile, int x, int y, int imageType, PaintEventArgs e)
@@ -105,42 +110,7 @@ namespace RuneWarz
             e.Graphics.DrawImage(this.Tiles, destination, source, GraphicsUnit.Pixel);
         }
 
-        HashSet<Tuple<int, int>> FindCurrentHoverTiles(int Player)
-        {
-            HashSet<Tuple<int, int>> HoverTiles = new HashSet<Tuple<int, int>>();
-            for (int y = 0; y < this.GameMap.BOARD_HEIGHT; ++y)
-                for (int x = 0; x < this.GameMap.BOARD_WIDTH; ++x)
-                {
-                    Game.Tile tile = this.GameMap.GameTiles[x + y * this.GameMap.BOARD_WIDTH];
-                    if (tile == null)
-                        continue;
-                    else if (tile.Owner == Player)
-                        AddHoverTiles(HoverTiles, x, y);
-                }
-            return HoverTiles;
-        }
 
-        void AddHoverTiles(HashSet<Tuple<int, int>> hoverTiles, int x, int y)
-        {
-            Tuple<int, int> xy = new Tuple<int,int>(x,y);
-            if (hoverTiles.Contains(xy))
-                return;
-            hoverTiles.Add(xy);
 
-            if (x > 0 && Tile_IsHoverColor(x - 1, y))
-                AddHoverTiles(hoverTiles, x - 1, y);
-            if (x < this.GameMap.BOARD_WIDTH - 1 && Tile_IsHoverColor(x + 1, y))
-                AddHoverTiles(hoverTiles, x + 1, y);
-            if (y > 0 && Tile_IsHoverColor(x, y - 1))
-              AddHoverTiles(hoverTiles, x, y - 1);
-            if (y < this.GameMap.BOARD_HEIGHT - 1 && Tile_IsHoverColor(x, y + 1))
-                AddHoverTiles(hoverTiles, x, y + 1);
-        }
-
-        bool Tile_IsHoverColor(int x, int y)
-        {
-            Game.Tile Tile = this.GameMap.GameTiles[x + y * this.GameMap.BOARD_WIDTH];
-            return Tile != null && Tile.Color == CurrentHoverColor;
-        }
     }
 }
