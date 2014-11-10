@@ -36,6 +36,9 @@ namespace RuneWarz
             this.Paint += Paint_GamePanel;
         }
 
+        /// <summary>
+        /// Reset the map to make it ready for a new game
+        /// </summary>
         public void StartNewGame()
         {
             this.GameMap = new Game.Board();
@@ -81,6 +84,11 @@ namespace RuneWarz
             this.Invalidate();
         }
         
+        /// <summary>
+        /// Main function for redrawing graphics
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         void Paint_GamePanel(object sender, PaintEventArgs e)
         {
             Graphics g = e.Graphics;
@@ -116,6 +124,14 @@ namespace RuneWarz
 
         }
 
+        /// <summary>
+        /// Helper function to draw a single Tile
+        /// </summary>
+        /// <param name="tile">Tile to draw</param>
+        /// <param name="x">X coordinate on the board</param>
+        /// <param name="y">Y coordinate on the board</param>
+        /// <param name="imageType">Kind of image to print</param>
+        /// <param name="e">A PaintEventArgs</param>
         void Paint_Tile(Game.Tile tile, int x, int y, int imageType, PaintEventArgs e)
         {
             const int tile_size = Game.Tile.TILE_SIZE;
