@@ -31,6 +31,7 @@ namespace RuneWarz
             this.BackColor = Color.Black;
 
             this.MouseMove += GamePanel_MouseMove;
+            //this.MouseClick += GamePanel_MouseClick;
             this.Paint += Paint_GamePanel;
         }
 
@@ -42,12 +43,7 @@ namespace RuneWarz
 
             // Each player automatically captures all nearby tiles of the game color
             for (int player = 0; player < this.GameMap.NumPlayers; ++player)
-            {
-                HashSet<Tuple<int, int>> Capturables = 
-                    this.GameMap.FindCapturableTiles(player, this.GameMap.Players[player].Color);
-                foreach (var tile in Capturables)
-                    this.GameMap.CaptureTile(player, tile.Item1, tile.Item2);
-            }
+                this.GameMap.CaptureTiles(player, this.GameMap.FindCapturableTiles(player, this.GameMap.Players[player].Color));
             this.Invalidate();
         }
 
@@ -68,6 +64,16 @@ namespace RuneWarz
             }
         }
 
+        void GamePanel_MouseClick(object sender, MouseEventArgs e)
+        {
+            //MessageBox.Show("Hello Click!");
+            for (int i = 0; i < this.GameMap.NumPlayers; ++i)
+                if (this.GameMap.Players[i].Color == CurrentHoverColor)
+                    return;
+
+            this.GameMap.CaptureTiles(Game.Player.PLAYER_HUMAN, 
+                this.GameMap.FindCapturableTiles(Game.Player.PLAYER_HUMAN, CurrentHoverColor));
+        }
         
         void Paint_GamePanel(object sender, PaintEventArgs e)
         {
@@ -95,11 +101,13 @@ namespace RuneWarz
                 if (this.GameMap.Players[i].Color == CurrentHoverColor)
                     Print_Tile_Type = Game.Tile.TILE_TYPE_LOCK;
 
-            HashSet<Tuple<int, int>> HoverTiles = 
+            List<Tuple<int, int>> HoverTiles = 
                 this.GameMap.FindCapturableTiles(Game.Player.PLAYER_HUMAN, CurrentHoverColor);
-            foreach (var tile in HoverTiles)
-                Paint_Tile(this.GameMap.GameTiles[tile.Item1 + tile.Item2 * this.GameMap.BOARD_WIDTH], 
-                           tile.Item1, tile.Item2, Print_Tile_Type, e);
+
+            for (int i = 0; i < HoverTiles.Count; ++i)
+                Paint_Tile(this.GameMap.GameTiles[HoverTiles[i].Item1 + HoverTiles[i].Item2 * this.GameMap.BOARD_WIDTH],
+                           HoverTiles[i].Item1, HoverTiles[i].Item2, Print_Tile_Type, e);
+
         }
 
         void Paint_Tile(Game.Tile tile, int x, int y, int imageType, PaintEventArgs e)
