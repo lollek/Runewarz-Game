@@ -41,7 +41,6 @@ namespace RuneWarz.Game
         public int NumPlayers;
 
         Tile[] GameTiles;
-        Random RandomNumberGenerator;
 
         /// <summary>
         /// Make a game board from a string.
@@ -51,7 +50,7 @@ namespace RuneWarz.Game
         /// </summary>
         public Board()
         {
-            this.RandomNumberGenerator = new Random();
+            Random RNG = new Random();
             this.GameTiles = new Tile[BOARD_WIDTH * BOARD_HEIGHT];
             this.Players = new Player[Game.Player.MAX_PLAYERS];
             this.NumPlayers = 0;
@@ -61,8 +60,8 @@ namespace RuneWarz.Game
                 {
                     switch (board1[y][x])
                     {
-                        case '#': AddNewTile(x, y); break;
-                        case '@': AddNewPlayer(x, y); break;
+                        case '#': AddNewTile(RNG, x, y); break;
+                        case '@': AddNewPlayer(RNG, x, y); break;
                     }
                 }
         }
@@ -160,9 +159,9 @@ namespace RuneWarz.Game
         /// </summary>
         /// <param name="x">X coordinate on the board</param>
         /// <param name="y">Y coordinate on the board</param>
-        void AddNewTile(int x, int y)
+        void AddNewTile(Random RNG, int x, int y)
         {
-            GameTiles[y * BOARD_WIDTH + x] = new Tile(RandomNumberGenerator.Next(Game.Tile.NUM_COLORS) + 1);
+            GameTiles[y * BOARD_WIDTH + x] = new Tile(RNG.Next(Game.Tile.NUM_COLORS) + 1);
         }
 
         /// <summary>
@@ -170,9 +169,9 @@ namespace RuneWarz.Game
         /// </summary>
         /// <param name="x">X coordinate on the board</param>
         /// <param name="y">Y coordinate on the board</param>
-        void AddNewPlayer(int x, int y)
+        void AddNewPlayer(Random RNG, int x, int y)
         {
-            AddNewTile(x, y);
+            AddNewTile(RNG, x, y);
             Tile Tile = this.GameTiles[y * BOARD_WIDTH + x];
 
             this.Players[this.NumPlayers] = new Player(Tile.Color);
