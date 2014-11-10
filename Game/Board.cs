@@ -69,6 +69,7 @@ namespace RuneWarz.Game
         public void CaptureTiles(int Player, int Color)
         {
             // Change color of all Player tiles to Color
+            this.Players[Player].Color = Color;
             for (int i = 0; i < BOARD_HEIGHT * BOARD_WIDTH; ++i)
                 if (this.GameTiles[i] != null && this.GameTiles[i].Owner == Player)
                     this.GameTiles[i].Color = Color;
