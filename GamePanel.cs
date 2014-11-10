@@ -31,6 +31,7 @@ namespace RuneWarz
             this.BackColor = Color.Black;
 
             this.MouseMove += GamePanel_MouseMove;
+            this.Paint += Paint_GamePanel;
         }
 
         public void StartNewGame()
@@ -38,7 +39,6 @@ namespace RuneWarz
             this.GameMap = new Game.Board();
             this.Offset_X = (800 - (this.GameMap.BOARD_WIDTH * Game.Tile.TILE_SIZE)) / 2;
             this.Offset_Y = (600 - (this.GameMap.BOARD_HEIGHT * Game.Tile.TILE_SIZE)) / 2;
-            this.Paint += GamePanel_Paint;
         }
 
         void GamePanel_MouseMove(object sender, MouseEventArgs e)
@@ -59,22 +59,41 @@ namespace RuneWarz
         }
 
         
-        void GamePanel_Paint(object sender, PaintEventArgs e)
+        void Paint_GamePanel(object sender, PaintEventArgs e)
         {
             Graphics g = e.Graphics;
+
+            /* First Iteration - Print ownership */
             for (int y = 0; y < this.GameMap.BOARD_HEIGHT; ++y)
                 for (int x = 0; x < this.GameMap.BOARD_WIDTH; ++x)
                 {
                     Game.Tile tile = this.GameMap.GameTiles[x + y * this.GameMap.BOARD_WIDTH];
                     if (tile == null)
                         continue;
-                    if (tile.Owner != -1)
+                    else if (tile.Owner != -1)
                         Paint_Tile(tile, x, y, Game.Tile.TILE_TYPE_PLA1 + tile.Owner, e);
-                    else if (tile.Color == CurrentHoverColor && HasPlayerNeighbourTile(x, y, Game.Player.PLAYER_HUMAN))
-                        Paint_Tile(tile, x, y, Game.Tile.TILE_TYPE_PLA1, e);
                     else
                         Paint_Tile(tile, x, y, Game.Tile.TILE_TYPE_NONE, e);
                 }
+
+            if (LastHoverColor == CurrentHoverColor)
+                return;
+
+            /* Second iteration - Print hover */
+            HashSet<Tuple<int, int>> HoverTiles = new HashSet<Tuple<int,int>>();
+            for (int y = 0; y < this.GameMap.BOARD_HEIGHT; ++y)
+                for (int x = 0; x < this.GameMap.BOARD_WIDTH; ++x)
+                {
+                    Game.Tile tile = this.GameMap.GameTiles[x + y * this.GameMap.BOARD_WIDTH];
+                    if (tile == null)
+                        continue;
+                    else if (tile.Owner == Game.Player.PLAYER_HUMAN)
+                        AddHoverTiles(HoverTiles, x, y);
+                }
+
+            foreach (var tile in HoverTiles)
+                Paint_Tile(this.GameMap.GameTiles[tile.Item1 + tile.Item2 * this.GameMap.BOARD_WIDTH], 
+                           tile.Item1, tile.Item2, Game.Tile.TILE_TYPE_PLA1, e);
         }
 
         void Paint_Tile(Game.Tile tile, int x, int y, int imageType, PaintEventArgs e)
@@ -85,34 +104,27 @@ namespace RuneWarz
             e.Graphics.DrawImage(this.Tiles, destination, source, GraphicsUnit.Pixel);
         }
 
-        bool HasPlayerNeighbourTile(int x, int y, int Player)
+        void AddHoverTiles(HashSet<Tuple<int, int>> hoverTiles, int x, int y)
         {
-            if (x > 0)
-            {
-                Game.Tile Tile = this.GameMap.GameTiles[x - 1 + y * this.GameMap.BOARD_WIDTH];
-                if (Tile != null && Tile.Owner == Player)
-                    return true;
-            }
-            if (x < this.GameMap.BOARD_WIDTH -1)
-            {
-                Game.Tile Tile = this.GameMap.GameTiles[x + 1 + y * this.GameMap.BOARD_WIDTH];
-                if (Tile != null && Tile.Owner == Player)
-                    return true;
-            }
+            Tuple<int, int> xy = new Tuple<int,int>(x,y);
+            if (hoverTiles.Contains(xy))
+                return;
+            hoverTiles.Add(xy);
 
-            if (y > 0)
-            {
-                Game.Tile Tile = this.GameMap.GameTiles[x + (y - 1) * this.GameMap.BOARD_WIDTH];
-                if (Tile != null && Tile.Owner == Player)
-                    return true;
-            }
-            if (y < this.GameMap.BOARD_HEIGHT - 1)
-            {
-                Game.Tile Tile = this.GameMap.GameTiles[x + (y + 1) * this.GameMap.BOARD_WIDTH];
-                if (Tile != null && Tile.Owner == Player)
-                    return true;
-            }
-            return false;
+            if (x > 0 && Tile_IsHoverColor(x - 1, y))
+                AddHoverTiles(hoverTiles, x - 1, y);
+            if (x < this.GameMap.BOARD_WIDTH - 1 && Tile_IsHoverColor(x + 1, y))
+                AddHoverTiles(hoverTiles, x + 1, y);
+            if (y > 0 && Tile_IsHoverColor(x, y - 1))
+              AddHoverTiles(hoverTiles, x, y - 1);
+            if (y < this.GameMap.BOARD_HEIGHT - 1 && Tile_IsHoverColor(x, y + 1))
+                AddHoverTiles(hoverTiles, x, y + 1);
+        }
+
+        bool Tile_IsHoverColor(int x, int y)
+        {
+            Game.Tile Tile = this.GameMap.GameTiles[x + y * this.GameMap.BOARD_WIDTH];
+            return Tile != null && Tile.Color == CurrentHoverColor;
         }
     }
 }
