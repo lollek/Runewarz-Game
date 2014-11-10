@@ -30,8 +30,9 @@ namespace RuneWarz
             this.Size = new System.Drawing.Size(800, 600);
             this.BackColor = Color.Black;
 
+            this.Enabled = true;
             this.MouseMove += GamePanel_MouseMove;
-            //this.MouseClick += GamePanel_MouseClick;
+            this.MouseDown += GamePanel_MouseClick;
             this.Paint += Paint_GamePanel;
         }
 
@@ -43,12 +44,15 @@ namespace RuneWarz
 
             // Each player automatically captures all nearby tiles of the game color
             for (int player = 0; player < this.GameMap.NumPlayers; ++player)
-                this.GameMap.CaptureTiles(player, this.GameMap.FindCapturableTiles(player, this.GameMap.Players[player].Color));
+                this.GameMap.CaptureTiles(player, this.GameMap.Players[player].Color);
             this.Invalidate();
         }
 
         void GamePanel_MouseMove(object sender, MouseEventArgs e)
         {
+            if (!this.Visible)
+                return;
+
             if (Offset_X == -1 || Offset_Y == -1)
                 return;
             int Board_X = (e.X - Offset_X) / Game.Tile.TILE_SIZE;
@@ -64,15 +68,17 @@ namespace RuneWarz
             }
         }
 
-        void GamePanel_MouseClick(object sender, MouseEventArgs e)
+        public void GamePanel_MouseClick(object sender, MouseEventArgs e)
         {
-            //MessageBox.Show("Hello Click!");
+            if (!this.Visible || CurrentHoverColor == -1)
+                return;
+
             for (int i = 0; i < this.GameMap.NumPlayers; ++i)
                 if (this.GameMap.Players[i].Color == CurrentHoverColor)
                     return;
 
-            this.GameMap.CaptureTiles(Game.Player.PLAYER_HUMAN, 
-                this.GameMap.FindCapturableTiles(Game.Player.PLAYER_HUMAN, CurrentHoverColor));
+            this.GameMap.CaptureTiles(Game.Player.PLAYER_HUMAN, CurrentHoverColor);
+            this.Invalidate();
         }
         
         void Paint_GamePanel(object sender, PaintEventArgs e)

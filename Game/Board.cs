@@ -66,17 +66,17 @@ namespace RuneWarz.Game
                 }
         }
 
-        public void CaptureTiles(int Player, List<Tuple<int, int>> Tiles)
+        public void CaptureTiles(int Player, int Color)
         {
-            for (int i = 0; i < Tiles.Count; ++i)
-                CaptureTile(Player, Tiles[i].Item1, Tiles[i].Item2);
-        }
+            // Change color of all Player tiles to Color
+            for (int i = 0; i < BOARD_HEIGHT * BOARD_WIDTH; ++i)
+                if (this.GameTiles[i] != null && this.GameTiles[i].Owner == Player)
+                    this.GameTiles[i].Color = Color;
 
-        public void CaptureTile(int Player, int x, int y)
-        {
-            Tile Tile = this.GameTiles[x + y * this.BOARD_WIDTH];
-            Tile.Owner = Player;
-            Tile.Color = this.Players[Player].Color;
+            // Change owner of capturable tiles to Player
+            List<Tuple<int, int>> Tiles = FindCapturableTiles(Player, Color);
+            for (int i = 0; i < Tiles.Count; ++i)
+                this.GameTiles[Tiles[i].Item1 + Tiles[i].Item2 * this.BOARD_WIDTH].Owner = Player;
         }
 
         public List<Tuple<int,int>> FindCapturableTiles(int Player, int Color)
@@ -104,7 +104,7 @@ namespace RuneWarz.Game
                 TryToAddTileToCapturables(hoverTiles, Color, x + 1, y);
             if (y > 0)
                 TryToAddTileToCapturables(hoverTiles, Color, x, y - 1);
-            if (x < this.BOARD_HEIGHT - 1)
+            if (y < this.BOARD_HEIGHT - 1)
                 TryToAddTileToCapturables(hoverTiles, Color, x, y + 1);
         }
 
