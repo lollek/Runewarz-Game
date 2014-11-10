@@ -63,7 +63,7 @@ namespace RuneWarz
             if (0 < Board_X && Board_X < this.GameMap.BOARD_WIDTH &&
                 0 < Board_Y && Board_Y < this.GameMap.BOARD_HEIGHT)
             {
-                Game.Tile Tile = this.GameMap.GameTiles[Board_X + Board_Y * this.GameMap.BOARD_WIDTH];
+                Game.Tile Tile = this.GameMap.GetTile(Board_X, Board_Y);
                 LastHoverColor = CurrentHoverColor;
                 CurrentHoverColor = Tile == null ? -1 : Tile.Color;
                 if (LastHoverColor != CurrentHoverColor)
@@ -97,7 +97,7 @@ namespace RuneWarz
             for (int y = 0; y < this.GameMap.BOARD_HEIGHT; ++y)
                 for (int x = 0; x < this.GameMap.BOARD_WIDTH; ++x)
                 {
-                    Game.Tile tile = this.GameMap.GameTiles[x + y * this.GameMap.BOARD_WIDTH];
+                    Game.Tile tile = this.GameMap.GetTile(x, y);
                     if (tile == null)
                         continue;
                     else if (tile.Owner != -1)
@@ -119,7 +119,7 @@ namespace RuneWarz
                 this.GameMap.FindCapturableTiles(Game.Player.PLAYER_HUMAN, CurrentHoverColor);
 
             for (int i = 0; i < HoverTiles.Count; ++i)
-                Paint_Tile(this.GameMap.GameTiles[HoverTiles[i].Item1 + HoverTiles[i].Item2 * this.GameMap.BOARD_WIDTH],
+                Paint_Tile(this.GameMap.GetTile(HoverTiles[i].Item1, HoverTiles[i].Item2),
                            HoverTiles[i].Item1, HoverTiles[i].Item2, Print_Tile_Type, e);
 
         }

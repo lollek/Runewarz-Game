@@ -37,9 +37,10 @@ namespace RuneWarz.Game
             ,"            #####   #####   #####"
             ,"            #####   #####   #####"};
 
-        public Tile[] GameTiles;
         public Player[] Players;
         public int NumPlayers;
+
+        Tile[] GameTiles;
         Random RandomNumberGenerator;
 
         /// <summary>
@@ -64,6 +65,11 @@ namespace RuneWarz.Game
                         case '@': AddNewPlayer(x, y); break;
                     }
                 }
+        }
+
+        public Tile GetTile(int x, int y)
+        {
+            return this.GameTiles[x + y * BOARD_WIDTH];
         }
 
         /// <summary>
