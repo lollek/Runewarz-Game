@@ -78,6 +78,12 @@ namespace RuneWarz
 
             this.GameMap.PlayerCaptureTiles(CurrentHoverColor);
             this.Invalidate();
+
+            while (!this.GameMap.PlayerCanMove())
+            {
+                this.GameMap.AITakeTurn();
+                this.Invalidate();
+            }
         }
         
         /// <summary>

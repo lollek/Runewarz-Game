@@ -41,7 +41,7 @@ namespace RuneWarz.Game
         public int NumPlayers;
 
         Tile[] GameTiles;
-        bool PlayerCanMove;
+        bool PlayersTurn;
 
         /// <summary>
         /// Make a game board from a string.
@@ -54,7 +54,7 @@ namespace RuneWarz.Game
             this.GameTiles = new Tile[BOARD_WIDTH * BOARD_HEIGHT];
             this.Players = new Player[Game.Player.MAX_PLAYERS];
             this.NumPlayers = 0;
-            this.PlayerCanMove = false;
+            this.PlayersTurn = false;
 
             Random RNG = new Random();
             for (int y = 0; y < BOARD_HEIGHT; ++y)
@@ -73,7 +73,7 @@ namespace RuneWarz.Game
                 List<Tuple<int, int>> Tiles = FindCapturableTiles(Player, this.Players[Player].Color);
                 CaptureTiles(Tiles, Player, this.Players[Player].Color);
             }
-            this.PlayerCanMove = true;
+            this.PlayersTurn = true;
         }
 
         /// <summary>
@@ -102,20 +102,58 @@ namespace RuneWarz.Game
         /// <param name="Color">The color of the tiles to capture</param>
         public void PlayerCaptureTiles(int Color)
         {
-            if (!this.PlayerCanMove)
+            if (!this.PlayersTurn)
                 return;
-            this.PlayerCanMove = false;
+            this.PlayersTurn = false;
 
             List<Tuple<int, int>> Tiles = FindCapturableTiles(Game.Player.PLAYER_HUMAN, Color);
             if (Tiles.Count > 0)
                 CaptureTiles(Tiles, Game.Player.PLAYER_HUMAN, Color);
             else
             {
-                this.PlayerCanMove = true;
+                this.PlayersTurn = true;
                 return;
             }
-            
+            Tiles.Clear();
+
             AITakeTurn();
+            this.PlayersTurn = true;
+        }
+
+        /// <summary>
+        /// Make all non-human players take a turn
+        /// </summary>
+        public void AITakeTurn()
+        {
+            for (int Player = Game.Player.PLAYER_HUMAN + 1; Player < this.NumPlayers; ++Player)
+            {
+                int BestColor = 0;
+                List<Tuple<int, int>> BestList = null;
+                for (int Color = 0; Color < Game.Tile.NUM_COLORS; ++Color)
+                {
+                    if (ColorIsInUse(Color))
+                        continue;
+
+                    List<Tuple<int, int>> List = FindCapturableTiles(Player, Color);
+                    if (BestList == null || BestList.Count < List.Count)
+                    {
+                        BestList = List;
+                        BestColor = Color;
+                    }
+                }
+                if (BestList.Count > 0)
+                    CaptureTiles(BestList, Player, BestColor);
+            }
+        }
+
+        public bool PlayerCanMove()
+        {
+            for (int Color = 0; Color < Game.Tile.NUM_COLORS; ++Color)
+                if (ColorIsInUse(Color))
+                    continue;
+                else if (FindCapturableTiles(Game.Player.PLAYER_HUMAN, Color).Count > 0)
+                    return true;
+            return false;
         }
 
         /// <summary>
@@ -160,34 +198,6 @@ namespace RuneWarz.Game
             for (int i = 0; i < BOARD_HEIGHT * BOARD_WIDTH; ++i)
                 if (this.GameTiles[i] != null && this.GameTiles[i].Owner == Player)
                     this.GameTiles[i].Color = Color;
-        }
-
-        /// <summary>
-        /// Make all non-human players take a turn
-        /// </summary>
-        void AITakeTurn()
-        {
-            for (int Player = Game.Player.PLAYER_HUMAN + 1; Player < this.NumPlayers; ++Player)
-            {
-                int BestColor = 0;
-                List<Tuple<int,int>> BestList = null;
-                for (int Color = 0; Color < Game.Tile.NUM_COLORS; ++Color)
-                {
-                    if (ColorIsInUse(Color))
-                        continue;
-
-                    List<Tuple<int,int>> List = this.FindCapturableTiles(Player, Color);
-                    if (BestList == null || BestList.Count < List.Count)
-                    {
-                        BestList = List;
-                        BestColor = Color;
-                    }
-                }
-                if (BestList.Count > 0)
-                    CaptureTiles(BestList, Player, BestColor);
-                System.Diagnostics.Debug.WriteLine("Player " + Player + " chose color " + BestColor);
-            }
-            this.PlayerCanMove = true;
         }
 
         /// <summary>
