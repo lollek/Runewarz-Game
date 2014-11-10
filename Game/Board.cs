@@ -41,6 +41,7 @@ namespace RuneWarz.Game
         public int NumPlayers;
 
         Tile[] GameTiles;
+        bool PlayerCanMove;
 
         /// <summary>
         /// Make a game board from a string.
@@ -50,11 +51,12 @@ namespace RuneWarz.Game
         /// </summary>
         public Board()
         {
-            Random RNG = new Random();
             this.GameTiles = new Tile[BOARD_WIDTH * BOARD_HEIGHT];
             this.Players = new Player[Game.Player.MAX_PLAYERS];
             this.NumPlayers = 0;
+            this.PlayerCanMove = false;
 
+            Random RNG = new Random();
             for (int y = 0; y < BOARD_HEIGHT; ++y)
                 for (int x = 0; x < board1[y].Length; ++x)
                 {
@@ -64,30 +66,56 @@ namespace RuneWarz.Game
                         case '@': AddNewPlayer(RNG, x, y); break;
                     }
                 }
+
+            // Each player automatically captures all nearby tiles of the game color
+            for (int Player = 0; Player < this.NumPlayers; ++Player)
+            {
+                List<Tuple<int, int>> Tiles = FindCapturableTiles(Player, this.Players[Player].Color);
+                CaptureTiles(Tiles, Player, this.Players[Player].Color);
+            }
+            this.PlayerCanMove = true;
         }
 
+        /// <summary>
+        /// Return the tile at the given position
+        /// </summary>
+        /// <param name="x">X coordinate on the board</param>
+        /// <param name="y">Y coordinate on the board</param>
+        /// <returns></returns>
         public Tile GetTile(int x, int y)
         {
             return this.GameTiles[x + y * BOARD_WIDTH];
         }
 
+        public bool ColorIsInUse(int Color)
+        {
+            for (int i = 0; i < this.NumPlayers; ++i)
+                if (this.Players[i].Color == Color)
+                    return true;
+            return false;
+        }
+
         /// <summary>
-        /// Make a player capture all nearby tiles of a given color
+        /// Make the human player capture all nearby tiles of a given color
         /// </summary>
         /// <param name="Player">The Player to capture tiles</param>
         /// <param name="Color">The color of the tiles to capture</param>
-        public void CaptureTiles(int Player, int Color)
+        public void PlayerCaptureTiles(int Color)
         {
-            // Change color of all Player tiles to Color
-            this.Players[Player].Color = Color;
-            for (int i = 0; i < BOARD_HEIGHT * BOARD_WIDTH; ++i)
-                if (this.GameTiles[i] != null && this.GameTiles[i].Owner == Player)
-                    this.GameTiles[i].Color = Color;
+            if (!this.PlayerCanMove)
+                return;
+            this.PlayerCanMove = false;
 
-            // Change owner of capturable tiles to Player
-            List<Tuple<int, int>> Tiles = FindCapturableTiles(Player, Color);
-            for (int i = 0; i < Tiles.Count; ++i)
-                this.GameTiles[Tiles[i].Item1 + Tiles[i].Item2 * this.BOARD_WIDTH].Owner = Player;
+            List<Tuple<int, int>> Tiles = FindCapturableTiles(Game.Player.PLAYER_HUMAN, Color);
+            if (Tiles.Count > 0)
+                CaptureTiles(Tiles, Game.Player.PLAYER_HUMAN, Color);
+            else
+            {
+                this.PlayerCanMove = true;
+                return;
+            }
+            
+            AITakeTurn();
         }
 
         /// <summary>
@@ -103,7 +131,7 @@ namespace RuneWarz.Game
             for (int y = 0; y < this.BOARD_HEIGHT; ++y)
                 for (int x = 0; x < this.BOARD_WIDTH; ++x)
                 {
-                    Game.Tile tile = this.GameTiles[x + y * this.BOARD_WIDTH];
+                    Game.Tile tile = GetTile(x, y);
                     if (tile != null && tile.Owner == Player)
                         AddNeighborsOfSameColor(HoverTiles, Color, x, y);
                 }
@@ -113,6 +141,53 @@ namespace RuneWarz.Game
                 AddNeighborsOfSameColor(HoverTiles, Color, HoverTiles[i].Item1, HoverTiles[i].Item2);
             
             return HoverTiles;
+        }
+
+        /// <summary>
+        /// Make a player capture all given tiles of a given color
+        /// </summary>
+        /// <param name="List">List of the tiles to capture</param>
+        /// <param name="Player">Which player to capture the tiles</param>
+        /// <param name="Color">Color to change player to</param>
+        void CaptureTiles(List<Tuple<int, int>> List, int Player, int Color)
+        {
+            // Change owner of capturable tiles to Player
+            for (int i = 0; i < List.Count; ++i)
+                this.GetTile(List[i].Item1, List[i].Item2).Owner = Player;
+
+            // Change color of all Player tiles to Color
+            this.Players[Player].Color = Color;
+            for (int i = 0; i < BOARD_HEIGHT * BOARD_WIDTH; ++i)
+                if (this.GameTiles[i] != null && this.GameTiles[i].Owner == Player)
+                    this.GameTiles[i].Color = Color;
+        }
+
+        /// <summary>
+        /// Make all non-human players take a turn
+        /// </summary>
+        void AITakeTurn()
+        {
+            for (int Player = Game.Player.PLAYER_HUMAN + 1; Player < this.NumPlayers; ++Player)
+            {
+                int BestColor = 0;
+                List<Tuple<int,int>> BestList = null;
+                for (int Color = 0; Color < Game.Tile.NUM_COLORS; ++Color)
+                {
+                    if (ColorIsInUse(Color))
+                        continue;
+
+                    List<Tuple<int,int>> List = this.FindCapturableTiles(Player, Color);
+                    if (BestList == null || BestList.Count < List.Count)
+                    {
+                        BestList = List;
+                        BestColor = Color;
+                    }
+                }
+                if (BestList.Count > 0)
+                    CaptureTiles(BestList, Player, BestColor);
+                System.Diagnostics.Debug.WriteLine("Player " + Player + " chose color " + BestColor);
+            }
+            this.PlayerCanMove = true;
         }
 
         /// <summary>
@@ -143,7 +218,7 @@ namespace RuneWarz.Game
         /// <param name="y">Y coordinate on the board</param>
         void TryToAddTileToCapturables(List<Tuple<int,int>> Tiles, int Color, int x, int y)
         {
-            Game.Tile Tile = this.GameTiles[x + y * this.BOARD_WIDTH];
+            Game.Tile Tile = GetTile(x, y);
             if (Tile == null || Tile.Color != Color || Tile.Owner != -1)
                 return;
 
@@ -161,7 +236,7 @@ namespace RuneWarz.Game
         /// <param name="y">Y coordinate on the board</param>
         void AddNewTile(Random RNG, int x, int y)
         {
-            GameTiles[y * BOARD_WIDTH + x] = new Tile(RNG.Next(Game.Tile.NUM_COLORS) + 1);
+            GameTiles[y * BOARD_WIDTH + x] = new Tile(RNG.Next(Game.Tile.NUM_COLORS));
         }
 
         /// <summary>
@@ -172,7 +247,7 @@ namespace RuneWarz.Game
         void AddNewPlayer(Random RNG, int x, int y)
         {
             AddNewTile(RNG, x, y);
-            Tile Tile = this.GameTiles[y * BOARD_WIDTH + x];
+            Tile Tile = GetTile(x, y);
 
             this.Players[this.NumPlayers] = new Player(Tile.Color);
             Tile.Owner = this.NumPlayers;

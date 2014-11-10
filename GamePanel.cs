@@ -44,10 +44,6 @@ namespace RuneWarz
             this.GameMap = new Game.Board();
             this.Offset_X = (800 - (this.GameMap.BOARD_WIDTH * Game.Tile.TILE_SIZE)) / 2;
             this.Offset_Y = (600 - (this.GameMap.BOARD_HEIGHT * Game.Tile.TILE_SIZE)) / 2;
-
-            // Each player automatically captures all nearby tiles of the game color
-            for (int player = 0; player < this.GameMap.NumPlayers; ++player)
-                this.GameMap.CaptureTiles(player, this.GameMap.Players[player].Color);
             this.Invalidate();
         }
 
@@ -80,7 +76,7 @@ namespace RuneWarz
                 if (this.GameMap.Players[i].Color == CurrentHoverColor)
                     return;
 
-            this.GameMap.CaptureTiles(Game.Player.PLAYER_HUMAN, CurrentHoverColor);
+            this.GameMap.PlayerCaptureTiles(CurrentHoverColor);
             this.Invalidate();
         }
         
@@ -135,7 +131,7 @@ namespace RuneWarz
         void Paint_Tile(Game.Tile tile, int x, int y, int imageType, PaintEventArgs e)
         {
             const int tile_size = Game.Tile.TILE_SIZE;
-            Rectangle source = new Rectangle(tile.Color * tile_size, imageType * tile_size, tile_size, tile_size);
+            Rectangle source = new Rectangle((tile.Color + 1) * tile_size, imageType * tile_size, tile_size, tile_size);
             Rectangle destination = new Rectangle(Offset_X + x * tile_size, Offset_Y + y * tile_size, tile_size, tile_size);
             e.Graphics.DrawImage(this.Tiles, destination, source, GraphicsUnit.Pixel);
         }
