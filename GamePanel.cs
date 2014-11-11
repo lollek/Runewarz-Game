@@ -44,10 +44,10 @@ namespace RuneWarz
         /// </summary>
         public void StartNewGame()
         {
-            this.GameMap = new Game.Board();
+            this.GameMap = new Game.Board(false);
             this.GameIsOver = false;
-            this.Offset_X = (800 - (this.GameMap.BOARD_WIDTH * Game.Tile.TILE_SIZE)) / 2;
-            this.Offset_Y = (600 - (this.GameMap.BOARD_HEIGHT * Game.Tile.TILE_SIZE)) / 2;
+            this.Offset_X = (800 - (this.GameMap.Width * Game.Tile.TILE_SIZE)) / 2;
+            this.Offset_Y = (600 - (this.GameMap.Height * Game.Tile.TILE_SIZE)) / 2;
             this.Invalidate();
         }
 
@@ -60,8 +60,8 @@ namespace RuneWarz
                 return;
             int Board_X = (e.X - Offset_X) / Game.Tile.TILE_SIZE;
             int Board_Y = (e.Y - Offset_Y) / Game.Tile.TILE_SIZE;
-            if (0 < Board_X && Board_X < this.GameMap.BOARD_WIDTH &&
-                0 < Board_Y && Board_Y < this.GameMap.BOARD_HEIGHT)
+            if (0 < Board_X && Board_X < this.GameMap.Width &&
+                0 < Board_Y && Board_Y < this.GameMap.Height)
             {
                 Game.Tile Tile = this.GameMap.GetTile(Board_X, Board_Y);
                 LastHoverColor = CurrentHoverColor;
@@ -105,8 +105,8 @@ namespace RuneWarz
             Graphics g = e.Graphics;
 
             /* First Iteration - Print ownership */
-            for (int y = 0; y < this.GameMap.BOARD_HEIGHT; ++y)
-                for (int x = 0; x < this.GameMap.BOARD_WIDTH; ++x)
+            for (int y = 0; y < this.GameMap.Height; ++y)
+                for (int x = 0; x < this.GameMap.Width; ++x)
                 {
                     Game.Tile tile = this.GameMap.GetTile(x, y);
                     if (tile == null)

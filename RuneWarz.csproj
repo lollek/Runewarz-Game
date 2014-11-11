@@ -76,6 +76,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Game\Board.cs" />
+    <Compile Include="Game\BoardTemplate.cs" />
     <Compile Include="Game\Player.cs" />
     <Compile Include="Game\Tile.cs" />
     <Compile Include="MainMenu.cs">

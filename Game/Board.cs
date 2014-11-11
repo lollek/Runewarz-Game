@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,39 +9,13 @@ namespace RuneWarz.Game
 {
     class Board
     {
-        public int BOARD_WIDTH = 45;
-        public int BOARD_HEIGHT = 25;
-        string[] board1 = new string[] { 
-             "            #####   #####   #####"
-            ,"            #####   #####   #####"
-            ," @##########################################"
-            ," #            #       #       #            #"
-            ," #            #       #       #            #"
-            ," #            #       #       #            #"
-            ,"#######    ####### ####### #######    #######"
-            ,"################## ####### #######    #######"
-            ,"#######    ####### ####### #######    #######"
-            ,"#######    ####### ####### #######    #######"
-            ,"#######    ####### ####### #######    #######"
-            ,"#######    ####### ####### #######    #######"
-            ,"#######    ####### ####### #######    #######"
-            ,"#######    ####### ####### #######    #######"
-            ,"#######    ####### ####### #######    #######"
-            ,"#######    ####### ####### #######    #######"
-            ,"#######    ####### ####### #######    #######"
-            ,"#######    ####### ####### ##################"
-            ,"#######    ####### ####### #######    #######"
-            ," #            #       #       #            #"
-            ," #            #       #       #            #"
-            ," #            #       #       #            #"
-            ," ##########################################@"
-            ,"            #####   #####   #####"
-            ,"            #####   #####   #####"};
-
-        public Player[] Players;
+        public int Width;
+        public int Height;
         public int NumPlayers;
+        public Player[] Players;
 
         Tile[] GameTiles;
+        DateTime LastSync;
         bool PlayersTurn;
 
         /// <summary>
@@ -49,18 +24,22 @@ namespace RuneWarz.Game
         /// @ becomes players (played tiles)
         /// The rest becomes unplayable tiles, and are invisible
         /// </summary>
-        public Board()
+        /// <param name="LoadSyncState">If true, we will attempt to load a saved game instead of starting a new</param>
+        public Board(bool LoadSyncState)
         {
-            this.GameTiles = new Tile[BOARD_WIDTH * BOARD_HEIGHT];
-            this.Players = new Player[Game.Player.MAX_PLAYERS];
+            BoardTemplate DefaultBoard = new BoardTemplate();
+            this.Width = DefaultBoard.BoardWidth;
+            this.Height = DefaultBoard.BoardHeight;
             this.NumPlayers = 0;
+            this.Players = new Player[Game.Player.MAX_PLAYERS];
+            this.GameTiles = new Tile[Width * Height];
             this.PlayersTurn = false;
 
             Random RNG = new Random();
-            for (int y = 0; y < BOARD_HEIGHT; ++y)
-                for (int x = 0; x < board1[y].Length; ++x)
+            for (int y = 0; y < Height; ++y)
+                for (int x = 0; x < DefaultBoard.Board[y].Length; ++x)
                 {
-                    switch (board1[y][x])
+                    switch (DefaultBoard.Board[y][x])
                     {
                         case '#': AddNewTile(RNG, x, y); break;
                         case '@': AddNewPlayer(RNG, x, y); break;
@@ -76,23 +55,18 @@ namespace RuneWarz.Game
             this.PlayersTurn = true;
         }
 
-        /// <summary>
-        /// Return the tile at the given position
-        /// </summary>
+        /// <summary>Get tile at position</summary>
         /// <param name="x">X coordinate on the board</param>
         /// <param name="y">Y coordinate on the board</param>
-        /// <returns></returns>
+        /// <returns>The tile at the given position</returns>
         public Tile GetTile(int x, int y)
         {
-            return this.GameTiles[x + y * BOARD_WIDTH];
+            return this.GameTiles[x + y * Width];
         }
 
-        public bool ColorIsInUse(int Color)
+        public bool AnyPlayerHasColor(int Color)
         {
-            for (int i = 0; i < this.NumPlayers; ++i)
-                if (this.Players[i].Color == Color)
-                    return true;
-            return false;
+            return Players.Any(Player => Player != null && Player.Color == Color);
         }
 
         /// <summary>
@@ -133,7 +107,7 @@ namespace RuneWarz.Game
                 List<Tuple<int, int>> BestList = null;
                 for (int Color = 0; Color < Game.Tile.NUM_COLORS; ++Color)
                 {
-                    if (ColorIsInUse(Color))
+                    if (AnyPlayerHasColor(Color))
                         continue;
 
                     List<Tuple<int, int>> List = FindCapturableTiles(Player, Color);
@@ -150,13 +124,14 @@ namespace RuneWarz.Game
                 }
                     
             }
+            Sync();
             return APlayerHasMoved;
         }
 
         public bool PlayerCanMove()
         {
             for (int Color = 0; Color < Game.Tile.NUM_COLORS; ++Color)
-                if (ColorIsInUse(Color))
+                if (AnyPlayerHasColor(Color))
                     continue;
                 else if (FindCapturableTiles(Game.Player.PLAYER_HUMAN, Color).Count > 0)
                     return true;
@@ -173,8 +148,8 @@ namespace RuneWarz.Game
         {
             // Find all tiles adjacent to the player's
             List<Tuple<int,int>> HoverTiles = new List<Tuple<int,int>>();
-            for (int y = 0; y < this.BOARD_HEIGHT; ++y)
-                for (int x = 0; x < this.BOARD_WIDTH; ++x)
+            for (int y = 0; y < this.Height; ++y)
+                for (int x = 0; x < this.Width; ++x)
                 {
                     Game.Tile tile = GetTile(x, y);
                     if (tile != null && tile.Owner == Player)
@@ -197,12 +172,13 @@ namespace RuneWarz.Game
         void CaptureTiles(List<Tuple<int, int>> List, int Player, int Color)
         {
             // Change owner of capturable tiles to Player
+
             for (int i = 0; i < List.Count; ++i)
                 this.GetTile(List[i].Item1, List[i].Item2).Owner = Player;
 
             // Change color of all Player tiles to Color
             this.Players[Player].Color = Color;
-            for (int i = 0; i < BOARD_HEIGHT * BOARD_WIDTH; ++i)
+            for (int i = 0; i < Height * Width; ++i)
                 if (this.GameTiles[i] != null && this.GameTiles[i].Owner == Player)
                     this.GameTiles[i].Color = Color;
         }
@@ -218,11 +194,11 @@ namespace RuneWarz.Game
         {
             if (x > 0)
                 TryToAddTileToCapturables(hoverTiles, Color, x - 1, y);
-            if (x < this.BOARD_WIDTH - 1)
+            if (x < this.Width - 1)
                 TryToAddTileToCapturables(hoverTiles, Color, x + 1, y);
             if (y > 0)
                 TryToAddTileToCapturables(hoverTiles, Color, x, y - 1);
-            if (y < this.BOARD_HEIGHT - 1)
+            if (y < this.Height - 1)
                 TryToAddTileToCapturables(hoverTiles, Color, x, y + 1);
         }
 
@@ -253,7 +229,7 @@ namespace RuneWarz.Game
         /// <param name="y">Y coordinate on the board</param>
         void AddNewTile(Random RNG, int x, int y)
         {
-            GameTiles[y * BOARD_WIDTH + x] = new Tile(RNG.Next(Game.Tile.NUM_COLORS));
+            GameTiles[y * Width + x] = new Tile(RNG.Next(Game.Tile.NUM_COLORS));
         }
 
         /// <summary>
@@ -271,6 +247,25 @@ namespace RuneWarz.Game
             this.NumPlayers++;
         }
 
+        void Sync()
+        {
+            const string Filename = ".runewarzsync";
 
+            // Make data to write
+            string Header = string.Format("{0}x{1} {2}", this.Width, this.Height, 
+                                string.Concat(this.Players.Select((Player) => (char)(Player == null ? ' ' : '0' + Player.Color))));
+            string Board = string.Concat(this.GameTiles.Select((Tile) => (char)(
+                                Tile == null ?     ' '
+                             : (Tile.Owner == -1 ? '0' + Tile.Color
+                             : /* default */       'A' + Tile.Owner))));
+
+            // Write data
+            using (FileStream FStream = File.Open(Filename, FileMode.Create))
+            using (StreamWriter WStream = new StreamWriter(FStream, Encoding.ASCII))
+            {
+                WStream.WriteLine(Header);
+                WStream.Write(Board);
+            }
+        }
     }
 }
