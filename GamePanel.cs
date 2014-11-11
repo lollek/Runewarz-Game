@@ -20,7 +20,7 @@ namespace RuneWarz
         int Offset_X = -1;
         int Offset_Y = -1;
 
-        bool GameIsOver;
+        public bool GameIsOver;
 
         public GamePanel() {
             Assembly TempAssembly = Assembly.GetExecutingAssembly();

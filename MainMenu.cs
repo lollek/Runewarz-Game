@@ -11,13 +11,13 @@ namespace RuneWarz
     class MainMenu : TableLayoutPanel
     {
         public Button NewGameButton;
-        public Button LoadGameButton;
+        public Button ResumeGameButton;
         public Button QuitButton;
 
         public MainMenu() 
         {
             this.NewGameButton = new Button();
-            this.LoadGameButton = new Button();
+            this.ResumeGameButton = new Button();
             this.QuitButton = new Button();
             this.SuspendLayout();
 
@@ -29,8 +29,8 @@ namespace RuneWarz
             this.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33333F));
             this.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33334F));
             this.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33333F));
-            this.Controls.Add(this.NewGameButton, 1, 1);
-            this.Controls.Add(this.LoadGameButton, 1, 2);
+            this.Controls.Add(this.ResumeGameButton, 1, 1);
+            this.Controls.Add(this.NewGameButton, 1, 2);
             this.Controls.Add(this.QuitButton, 1, 4);
             this.Location = new Point(0, 30);
             this.Name = "GUIPanel";
@@ -59,14 +59,14 @@ namespace RuneWarz
 
             // Set LoadGameButton
             this.NewGameButton.Anchor = ((AnchorStyles)(((AnchorStyles.Top | AnchorStyles.Left) | AnchorStyles.Right)));
-            this.LoadGameButton.FlatAppearance.MouseOverBackColor = Orange;
-            this.LoadGameButton.FlatStyle = FlatStyle.Flat;
-            this.LoadGameButton.Location = new Point(269, 263);
-            this.LoadGameButton.Name = "LoadGameButton";
-            this.LoadGameButton.Size = new Size(260, 23);
-            this.LoadGameButton.TabIndex = 1;
-            this.LoadGameButton.Text = "Load Game";
-            this.LoadGameButton.UseVisualStyleBackColor = true;
+            this.ResumeGameButton.FlatAppearance.MouseOverBackColor = Orange;
+            this.ResumeGameButton.FlatStyle = FlatStyle.Flat;
+            this.ResumeGameButton.Location = new Point(269, 263);
+            this.ResumeGameButton.Name = "ResumeGameButton";
+            this.ResumeGameButton.Size = new Size(260, 23);
+            this.ResumeGameButton.TabIndex = 1;
+            this.ResumeGameButton.Text = "Resume Game";
+            this.ResumeGameButton.UseVisualStyleBackColor = true;
 
             // Set QuitButton
             this.QuitButton.Anchor = ((AnchorStyles)(((AnchorStyles.Top | AnchorStyles.Left) | AnchorStyles.Right)));

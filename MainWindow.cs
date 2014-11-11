@@ -47,7 +47,7 @@ namespace RuneWarz
             this.GUIPanel.MouseDown += HandleMouseDown;
 
             this.GUIPanel.NewGameButton.MouseClick += HandleMouseClick;
-            this.GUIPanel.LoadGameButton.MouseClick += HandleMouseClick;
+            this.GUIPanel.ResumeGameButton.MouseClick += HandleMouseClick;
             this.GUIPanel.QuitButton.MouseClick += HandleMouseClick;
 
             this.Controls.Add(this.GamePanel);
@@ -63,7 +63,12 @@ namespace RuneWarz
 
         private void HandleMouseClick(object sender, MouseEventArgs e)
         {
-            if (sender.Equals(this.GUIPanel.NewGameButton))
+            if (sender.Equals(this.GUIPanel.ResumeGameButton) && !this.GamePanel.GameIsOver)
+            {
+                this.GUIPanel.Visible = false;
+                this.GamePanel.Visible = true;
+            }
+            else if (sender.Equals(this.GUIPanel.NewGameButton))
             {
                 this.GUIPanel.Visible = false;
                 this.GamePanel.Visible = true;
