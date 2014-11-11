@@ -20,12 +20,15 @@ namespace RuneWarz
         int Offset_X = -1;
         int Offset_Y = -1;
 
+        bool GameIsOver;
+
         public GamePanel() {
             Assembly TempAssembly = Assembly.GetExecutingAssembly();
             Stream ImageStream = TempAssembly.GetManifestResourceStream("RuneWarz.tiles.png");
             this.Tiles = new Bitmap(ImageStream);
 
             this.Visible = false;
+            this.GameIsOver = true;
             this.Location = new System.Drawing.Point(0, 30);
             this.Size = new System.Drawing.Size(800, 600);
             this.BackColor = Color.Black;
@@ -42,6 +45,7 @@ namespace RuneWarz
         public void StartNewGame()
         {
             this.GameMap = new Game.Board();
+            this.GameIsOver = false;
             this.Offset_X = (800 - (this.GameMap.BOARD_WIDTH * Game.Tile.TILE_SIZE)) / 2;
             this.Offset_Y = (600 - (this.GameMap.BOARD_HEIGHT * Game.Tile.TILE_SIZE)) / 2;
             this.Invalidate();
@@ -49,7 +53,7 @@ namespace RuneWarz
 
         void GamePanel_MouseMove(object sender, MouseEventArgs e)
         {
-            if (!this.Visible)
+            if (!this.Visible || this.GameIsOver)
                 return;
 
             if (Offset_X == -1 || Offset_Y == -1)
@@ -69,7 +73,7 @@ namespace RuneWarz
 
         public void GamePanel_MouseClick(object sender, MouseEventArgs e)
         {
-            if (!this.Visible || CurrentHoverColor == -1)
+            if (!this.Visible || CurrentHoverColor == -1 || GameIsOver)
                 return;
 
             for (int i = 0; i < this.GameMap.NumPlayers; ++i)
@@ -81,7 +85,12 @@ namespace RuneWarz
 
             while (!this.GameMap.PlayerCanMove())
             {
-                this.GameMap.AITakeTurn();
+                if (!this.GameMap.AITakeTurn())
+                {
+                    this.GameIsOver = true;
+                    this.Invalidate();
+                    return;
+                }
                 this.Invalidate();
             }
         }
@@ -108,7 +117,15 @@ namespace RuneWarz
                         Paint_Tile(tile, x, y, Game.Tile.TILE_TYPE_NONE, e);
                 }
 
-            if (LastHoverColor == CurrentHoverColor)
+
+            if (this.GameIsOver)
+            {
+                Font Font = new Font("Microsoft Sans Serif", 16, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
+                g.DrawString("Game over!", Font, Brushes.White, new Point(this.Width / 2 - this.Offset_X, 50));
+                Font.Dispose();
+                return;
+            }
+            else if (LastHoverColor == CurrentHoverColor)
                 return;
 
             /* Second iteration - Print hover */

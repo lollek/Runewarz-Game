@@ -121,10 +121,12 @@ namespace RuneWarz.Game
         }
 
         /// <summary>
-        /// Make all non-human players take a turn
+        /// Make all non-human players take a turn.
+        /// Returns false if no AI player could move
         /// </summary>
-        public void AITakeTurn()
+        public bool AITakeTurn()
         {
+            bool APlayerHasMoved = false;
             for (int Player = Game.Player.PLAYER_HUMAN + 1; Player < this.NumPlayers; ++Player)
             {
                 int BestColor = 0;
@@ -142,8 +144,13 @@ namespace RuneWarz.Game
                     }
                 }
                 if (BestList.Count > 0)
+                {
                     CaptureTiles(BestList, Player, BestColor);
+                    APlayerHasMoved = true;
+                }
+                    
             }
+            return APlayerHasMoved;
         }
 
         public bool PlayerCanMove()
