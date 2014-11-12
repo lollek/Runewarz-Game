@@ -41,10 +41,7 @@ namespace RuneWarz
             this.ClientSize = new Size(800, 630);
             this.ControlBox = false;
 
-            this.MouseDown += HandleMouseDown;
-            this.GamePanel.MouseDown += HandleMouseDown;
             this.TitleBar.MouseDown += HandleMouseDown;
-            this.GUIPanel.MouseDown += HandleMouseDown;
 
             this.GUIPanel.NewGameButton.MouseClick += HandleMouseClick;
             this.GUIPanel.ResumeGameButton.MouseClick += HandleMouseClick;
