@@ -63,10 +63,11 @@ namespace RuneWarz
 
         private void HandleMouseClick(object sender, MouseEventArgs e)
         {
-            if (sender.Equals(this.GUIPanel.ResumeGameButton) && !this.GamePanel.GameIsOver)
+            if (sender.Equals(this.GUIPanel.ResumeGameButton))
             {
                 this.GUIPanel.Visible = false;
                 this.GamePanel.Visible = true;
+                this.GamePanel.ResumeGame();
             }
             else if (sender.Equals(this.GUIPanel.NewGameButton))
             {

@@ -10,14 +10,14 @@ namespace RuneWarz
 {
     class TitleBar : Panel
     {
-        private Form Parent;
+        private Form ParentForm;
         private Label Title;
         private Label IconClose;
         private Label IconMinimize;
 
         public TitleBar(Form parent) 
         {
-            this.Parent = parent;
+            this.ParentForm = parent;
             this.Title = new Label();
             this.IconClose = new Label();
             this.IconMinimize = new Label();
@@ -77,7 +77,7 @@ namespace RuneWarz
             }
             else if (sender.Equals(this.IconMinimize))
             {
-                Parent.WindowState = FormWindowState.Minimized;
+                ParentForm.WindowState = FormWindowState.Minimized;
             }
         }
 

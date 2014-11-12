@@ -12,23 +12,29 @@ namespace RuneWarz
 {
     class GamePanel : PictureBox
     {
-        Game.Board GameMap;
+        const int TILESIZE = 15;
+        const int TILE_OWNERLESS = 0;
+        const int TILE_PADLOCK = 1;
+        const int TILE_PLAYER1 = 2;
+        const int TILE_PLAYER2 = 3;
+        const int TILE_PLAYER3 = 4;
+        const int TILE_PLAYER4 = 5;
+
         Bitmap Tiles;
+        Game.Game Game;
 
         int LastHoverColor = -1;
         int CurrentHoverColor = -1;
         int Offset_X = -1;
         int Offset_Y = -1;
 
-        public bool GameIsOver;
-
         public GamePanel() {
             Assembly TempAssembly = Assembly.GetExecutingAssembly();
             Stream ImageStream = TempAssembly.GetManifestResourceStream("RuneWarz.tiles.png");
             this.Tiles = new Bitmap(ImageStream);
+            this.Game = new Game.Game(this);
 
             this.Visible = false;
-            this.GameIsOver = true;
             this.Location = new System.Drawing.Point(0, 30);
             this.Size = new System.Drawing.Size(800, 600);
             this.BackColor = Color.Black;
@@ -44,55 +50,41 @@ namespace RuneWarz
         /// </summary>
         public void StartNewGame()
         {
-            this.GameMap = new Game.Board(false);
-            this.GameIsOver = false;
-            this.Offset_X = (800 - (this.GameMap.Width * Game.Tile.TILE_SIZE)) / 2;
-            this.Offset_Y = (600 - (this.GameMap.Height * Game.Tile.TILE_SIZE)) / 2;
+            Game.NewGame();
+            this.Offset_X = (800 - (this.Game.BoardWidth() * TILESIZE)) / 2;
+            this.Offset_Y = (600 - (this.Game.BoardHeight() * TILESIZE)) / 2;
             this.Invalidate();
+        }
+        public void ResumeGame()
+        {
+            if (Offset_X == -1 || Offset_Y == -1)
+                StartNewGame();
         }
 
         void GamePanel_MouseMove(object sender, MouseEventArgs e)
         {
-            if (!this.Visible || this.GameIsOver)
-                return;
-
             if (Offset_X == -1 || Offset_Y == -1)
                 return;
-            int Board_X = (e.X - Offset_X) / Game.Tile.TILE_SIZE;
-            int Board_Y = (e.Y - Offset_Y) / Game.Tile.TILE_SIZE;
-            if (0 < Board_X && Board_X < this.GameMap.Width &&
-                0 < Board_Y && Board_Y < this.GameMap.Height)
+
+            int Board_X = (e.X - Offset_X) / TILESIZE;
+            int Board_Y = (e.Y - Offset_Y) / TILESIZE;
+            if (0 < Board_X && Board_X < this.Game.BoardWidth() &&
+                0 < Board_Y && Board_Y < this.Game.BoardHeight())
             {
-                Game.Tile Tile = this.GameMap.GetTile(Board_X, Board_Y);
                 LastHoverColor = CurrentHoverColor;
-                CurrentHoverColor = Tile == null ? -1 : Tile.Color;
+                CurrentHoverColor = Game.GetColorOfTile(Board_X, Board_Y);
                 if (LastHoverColor != CurrentHoverColor)
                     this.Invalidate();
             }
         }
 
-        public void GamePanel_MouseClick(object sender, MouseEventArgs e)
+        void GamePanel_MouseClick(object sender, MouseEventArgs e)
         {
-            if (!this.Visible || CurrentHoverColor == -1 || GameIsOver)
+            if (!this.Visible || CurrentHoverColor == -1)
                 return;
 
-            for (int i = 0; i < this.GameMap.NumPlayers; ++i)
-                if (this.GameMap.Players[i].Color == CurrentHoverColor)
-                    return;
-
-            this.GameMap.PlayerCaptureTiles(CurrentHoverColor);
-            this.Invalidate();
-
-            while (!this.GameMap.PlayerCanMove())
-            {
-                if (!this.GameMap.AITakeTurn())
-                {
-                    this.GameIsOver = true;
-                    this.Invalidate();
-                    return;
-                }
+            if (this.Game.TakeTurn(CurrentHoverColor))
                 this.Invalidate();
-            }
         }
         
         /// <summary>
@@ -105,20 +97,15 @@ namespace RuneWarz
             Graphics g = e.Graphics;
 
             /* First Iteration - Print ownership */
-            for (int y = 0; y < this.GameMap.Height; ++y)
-                for (int x = 0; x < this.GameMap.Width; ++x)
+            for (int y = 0; y < this.Game.BoardHeight(); ++y)
+                for (int x = 0; x < this.Game.BoardWidth(); ++x)
                 {
-                    Game.Tile tile = this.GameMap.GetTile(x, y);
-                    if (tile == null)
-                        continue;
-                    else if (tile.Owner != -1)
-                        Paint_Tile(tile, x, y, Game.Tile.TILE_TYPE_PLA1 + tile.Owner, e);
-                    else
-                        Paint_Tile(tile, x, y, Game.Tile.TILE_TYPE_NONE, e);
+                    int Color = Game.GetColorOfTile(x, y);
+                    int Owner = Game.GetOwnerOfTile(x, y);
+                    Paint_Tile(x, y, Owner == -1 ? TILE_OWNERLESS : TILE_PLAYER1 + Owner, Color, e);
                 }
 
-
-            if (this.GameIsOver)
+            if (this.Game.GameIsOver)
             {
                 Font Font = new Font("Microsoft Sans Serif", 16, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
                 g.DrawString("Game over!", Font, Brushes.White, new Point(this.Width / 2 - this.Offset_X, 50));
@@ -129,18 +116,18 @@ namespace RuneWarz
                 return;
 
             /* Second iteration - Print hover */
-            int Print_Tile_Type = Game.Tile.TILE_TYPE_PLA1;
-            for (int i = 0; i < this.GameMap.NumPlayers; ++i)
-                if (this.GameMap.Players[i].Color == CurrentHoverColor)
-                    Print_Tile_Type = Game.Tile.TILE_TYPE_LOCK;
+            int Print_Tile_Type = TILE_PLAYER1;
+            if (this.Game.AnyPlayerHasColor(CurrentHoverColor))
+                Print_Tile_Type = TILE_PADLOCK;
 
-            List<Tuple<int, int>> HoverTiles = 
-                this.GameMap.FindCapturableTiles(Game.Player.PLAYER_HUMAN, CurrentHoverColor);
-
+            List<Tuple<int, int>> HoverTiles = this.Game.GetCapturableTiles(this.Game.HumanPlayer(), CurrentHoverColor);
             for (int i = 0; i < HoverTiles.Count; ++i)
-                Paint_Tile(this.GameMap.GetTile(HoverTiles[i].Item1, HoverTiles[i].Item2),
-                           HoverTiles[i].Item1, HoverTiles[i].Item2, Print_Tile_Type, e);
-
+            {
+                int x = HoverTiles[i].Item1;
+                int y = HoverTiles[i].Item2;
+                Paint_Tile(x, y, Print_Tile_Type, this.Game.GetColorOfTile(x, y), e);
+            }
+                
         }
 
         /// <summary>
@@ -151,15 +138,11 @@ namespace RuneWarz
         /// <param name="y">Y coordinate on the board</param>
         /// <param name="imageType">Kind of image to print</param>
         /// <param name="e">A PaintEventArgs</param>
-        void Paint_Tile(Game.Tile tile, int x, int y, int imageType, PaintEventArgs e)
+        void Paint_Tile(int x, int y, int imageType, int Color, PaintEventArgs e)
         {
-            const int tile_size = Game.Tile.TILE_SIZE;
-            Rectangle source = new Rectangle((tile.Color + 1) * tile_size, imageType * tile_size, tile_size, tile_size);
-            Rectangle destination = new Rectangle(Offset_X + x * tile_size, Offset_Y + y * tile_size, tile_size, tile_size);
+            Rectangle source = new Rectangle((Color + 1) * TILESIZE, imageType * TILESIZE, TILESIZE, TILESIZE);
+            Rectangle destination = new Rectangle(Offset_X + x * TILESIZE, Offset_Y + y * TILESIZE, TILESIZE, TILESIZE);
             e.Graphics.DrawImage(this.Tiles, destination, source, GraphicsUnit.Pixel);
         }
-
-
-
     }
 }
