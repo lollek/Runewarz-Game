@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace RuneWarz.Game
@@ -14,6 +15,8 @@ namespace RuneWarz.Game
         public int NumPlayers { get; private set; }
         public Player[] Players { get; private set; }
         public Tile[] GameTiles { get; private set; }
+
+        const string Filename = ".runewarzsync";
 
         /// <summary>
         /// Make a new game board
@@ -44,13 +47,18 @@ namespace RuneWarz.Game
             // Each player automatically captures all nearby tiles of the game color
             for (int player = 0; player < this.NumPlayers; ++player)
                 TryToCapture(player, this.Players[player].Color);
+
+            Sync();
         }
 
-        public Board LoadFromState()
+        public static Board LoadFromState()
         {
-            Sync();
-            return this;
+            if (File.Exists(Filename))
+                return new Board(true);
+            else
+                return new Board();
         }
+        Board(bool sync) { if (sync) { Sync(); } }
 
         /// <summary>Get tile at position</summary>
         /// <param name="x">X coordinate on the board</param>
@@ -157,25 +165,77 @@ namespace RuneWarz.Game
             this.NumPlayers++;
         }
 
-        void Sync()
+        public void Sync()
         {
-            const string Filename = ".runewarzsync";
-
-            // Make data to write
-            string Header = string.Format("{0}x{1} {2}", this.Width, this.Height, 
-                                string.Concat(this.Players.Select((Player) => (char)(Player == null ? ' ' : '0' + Player.Color))));
-            string Board = string.Concat(this.GameTiles.Select((Tile) => (char)(
-                                Tile == null ?     ' '
-                             : (Tile.Owner == -1 ? '0' + Tile.Color
-                             : /* default */       'A' + Tile.Owner))));
-
-            // Write data
-            using (FileStream FStream = File.Open(Filename, FileMode.Create))
-            using (StreamWriter WStream = new StreamWriter(FStream, Encoding.ASCII))
+            // Load from state
+            if (this.GameTiles == null)
             {
-                WStream.WriteLine(Header);
-                WStream.Write(Board);
+                using (FileStream FStream = File.OpenRead(Filename))
+                using (StreamReader RStream = new StreamReader(FStream, Encoding.ASCII))
+                {
+                    Sync_StringToHeader(RStream.ReadLine());
+                    Sync_StringToBoard(RStream.ReadLine());
+                }
             }
+            // Save to state
+            else
+            {
+                // Write data
+                using (FileStream FStream = File.Open(Filename, FileMode.Create))
+                using (StreamWriter WStream = new StreamWriter(FStream, Encoding.ASCII))
+                {
+                    WStream.WriteLine(Sync_HeaderToString());
+                    WStream.Write(Sync_BoardToString());
+                }
+            }
+        }
+        /// <summary>
+        /// Creates a Header string "%dx%d %d+" where 
+        /// %dx%d is the width and height of the board. e.g. 45x25
+        /// %d+ is the color of existing players. e.g. 25   would be that there are two players, 
+        ///   and player 1 has color 2, while player 2 has color 5
+        /// </summary>
+        /// <returns>String that can be saved to file</returns>
+        string Sync_HeaderToString()
+        {
+            return string.Format("{0}x{1} {2}", this.Width, this.Height,
+                     string.Concat(this.Players.Select((Player) =>
+                            (char)(Player == null ? ' ' : '0' + Player.Color))));
+        }
+        void Sync_StringToHeader(string Header)
+        {
+            Match match = new Regex(@"^(\d+)x(\d+)\s(\d+)\s*$").Match(Header);
+            this.Width = int.Parse(match.Groups[1].ToString());
+            this.Height = int.Parse(match.Groups[2].ToString());
+            this.NumPlayers = 0;
+            this.Players = match.Groups[3].ToString()
+                           .Where((num) => num != ' ')
+                           .Select((num) => new Player(num - '0'))
+                           .ToArray();
+        }
+
+        /// <summary>
+        /// Creates a Board string, which is the board array converted to an ascii string which 1 char representing each tile
+        /// A space means that there is nothing there (null, black in the game)
+        /// A number means that it's not captured by a player, and the number represents its color
+        /// A letter means that it's captured by a player, A = player 1, B = player2 and so on.
+        /// </summary>
+        /// <returns>String that can be saved to file</returns>
+        string Sync_BoardToString()
+        {
+            return string.Concat(this.GameTiles.Select((Tile) => (char)(
+                                        Tile == null ? ' '
+                                 : (Tile.Owner == -1 ? '0' + Tile.Color
+                                 : /* Has owner */     'A' + Tile.Owner))));
+        }
+        void Sync_StringToBoard(string Board)
+        {
+            this.GameTiles = 
+                Board.Select((tile) =>
+                    tile == ' ' ? null
+                    :new Tile(('0' <= tile && tile <= '9') ? tile - '0' : this.Players[tile - 'A'].Color,
+                              ('0' <= tile && tile <= '9') ? -1   : tile - 'A'))
+                .ToArray();
         }
     }
 }

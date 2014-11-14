@@ -18,5 +18,11 @@ namespace RuneWarz.Game
             this.Color = color;
             this.Owner = -1;
         }
+
+        public Tile(int color, int owner)
+        {
+            this.Color = color;
+            this.Owner = owner;
+        }
     }
 }

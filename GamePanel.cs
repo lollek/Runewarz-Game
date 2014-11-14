@@ -57,8 +57,10 @@ namespace RuneWarz
         }
         public void ResumeGame()
         {
-            if (Offset_X == -1 || Offset_Y == -1)
-                StartNewGame();
+            Game.ResumeGame();
+            this.Offset_X = (800 - (this.Game.BoardWidth() * TILESIZE)) / 2;
+            this.Offset_Y = (600 - (this.Game.BoardHeight() * TILESIZE)) / 2;
+            this.Invalidate();
         }
 
         void GamePanel_MouseMove(object sender, MouseEventArgs e)

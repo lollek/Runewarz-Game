@@ -28,6 +28,14 @@ namespace RuneWarz.Game
             this.PlayerIsAllowedToMove = true;
             this.GameIsOver = false;
         }
+        public void ResumeGame()
+        {
+            if (this.Board != null)
+                return;
+            this.Board = Board.LoadFromState();
+            this.PlayerIsAllowedToMove = true;
+            this.GameIsOver = false;
+        }
 
         public int HumanPlayer() { return Player.PLAYER_HUMAN;  }
         public int BoardWidth() { return this.Board == null ? 0 : this.Board.Width; }
@@ -83,6 +91,7 @@ namespace RuneWarz.Game
                 }
             } while (PlayerIsStuck());
 
+            this.Board.Sync();
             this.PlayerIsAllowedToMove = true;
             return true;
         }
