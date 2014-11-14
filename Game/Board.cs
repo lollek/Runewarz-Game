@@ -207,7 +207,7 @@ namespace RuneWarz.Game
             Match match = new Regex(@"^(\d+)x(\d+)\s(\d+)\s*$").Match(Header);
             this.Width = int.Parse(match.Groups[1].ToString());
             this.Height = int.Parse(match.Groups[2].ToString());
-            this.NumPlayers = 0;
+            this.NumPlayers = match.Groups[3].ToString().Length;
             this.Players = match.Groups[3].ToString()
                            .Where((num) => num != ' ')
                            .Select((num) => new Player(num - '0'))
