@@ -16,7 +16,7 @@ namespace RuneWarz.Game
         public Player[] Players { get; private set; }
         public Tile[] GameTiles { get; private set; }
 
-        const string Filename = ".runewarzsync";
+        const string Filename = "RuneWarz.sync";
 
         /// <summary>
         /// Make a new game board
