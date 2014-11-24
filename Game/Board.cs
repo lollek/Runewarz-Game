@@ -17,6 +17,7 @@ namespace RuneWarz.Game
         public Tile[] GameTiles { get; private set; }
 
         const string Filename = "RuneWarz.sync";
+        DateTime LastWrite;
 
         /// <summary>
         /// Make a new game board
@@ -48,7 +49,7 @@ namespace RuneWarz.Game
             for (int player = 0; player < this.NumPlayers; ++player)
                 TryToCapture(player, this.Players[player].Color);
 
-            Sync();
+            Sync_Save();
         }
 
         public static Board LoadFromState()
@@ -167,28 +168,33 @@ namespace RuneWarz.Game
 
         public void Sync()
         {
-            // Load from state
-            if (this.GameTiles == null)
-            {
-                using (FileStream FStream = File.OpenRead(Filename))
-                using (StreamReader RStream = new StreamReader(FStream, Encoding.ASCII))
-                {
-                    Sync_StringToHeader(RStream.ReadLine());
-                    Sync_StringToBoard(RStream.ReadLine());
-                }
-            }
-            // Save to state
+            DateTime LastWrite = File.GetLastWriteTimeUtc(Filename);
+            if (this.GameTiles == null || this.LastWrite == null || this.LastWrite < LastWrite)
+                Sync_Load();
             else
-            {
-                // Write data
-                using (FileStream FStream = File.Open(Filename, FileMode.Create))
-                using (StreamWriter WStream = new StreamWriter(FStream, Encoding.ASCII))
-                {
-                    WStream.WriteLine(Sync_HeaderToString());
-                    WStream.Write(Sync_BoardToString());
-                }
-            }
+                Sync_Save();
         }
+        void Sync_Save()
+        {
+            using (FileStream FStream = File.Open(Filename, FileMode.Create))
+            using (StreamWriter WStream = new StreamWriter(FStream, Encoding.ASCII))
+            {
+                WStream.WriteLine(Sync_HeaderToString());
+                WStream.Write(Sync_BoardToString());
+            }
+            this.LastWrite = File.GetLastWriteTimeUtc(Filename);
+        }
+        void Sync_Load()
+        {
+            using (FileStream FStream = File.OpenRead(Filename))
+            using (StreamReader RStream = new StreamReader(FStream, Encoding.ASCII))
+            {
+                Sync_StringToHeader(RStream.ReadLine());
+                Sync_StringToBoard(RStream.ReadLine());
+            }
+            this.LastWrite = File.GetLastWriteTimeUtc(Filename);
+        }
+
         /// <summary>
         /// Creates a Header string "%dx%d %d+" where 
         /// %dx%d is the width and height of the board. e.g. 45x25
