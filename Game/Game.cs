@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ namespace RuneWarz.Game
         GamePanel Graphics;
         Board Board;
         bool PlayerIsAllowedToMove;
+        FileSystemWatcher Watcher;
 
         public Game(GamePanel Graphics)
         {
@@ -25,6 +27,7 @@ namespace RuneWarz.Game
         public void NewGame()
         {
             this.Board = new Board();
+            WatchSaveFile();
             this.PlayerIsAllowedToMove = true;
             this.GameIsOver = false;
         }
@@ -33,6 +36,7 @@ namespace RuneWarz.Game
             if (this.Board != null)
                 return;
             this.Board = Board.LoadFromState();
+            WatchSaveFile();
             this.PlayerIsAllowedToMove = true;
             this.GameIsOver = false;
         }
@@ -91,7 +95,7 @@ namespace RuneWarz.Game
                 }
             } while (PlayerIsStuck());
 
-            this.Board.Sync();
+            this.Board.Sync(true);
             this.PlayerIsAllowedToMove = true;
             return true;
         }
@@ -131,6 +135,22 @@ namespace RuneWarz.Game
                 else if (GetCapturableTiles(HumanPlayer(), Color).Count > 0)
                     return false;
             return true;
+        }
+
+        void WatchSaveFile()
+        {
+            if (this.Watcher != null)
+                return;
+
+            this.Watcher = new FileSystemWatcher(".", Board.Filename);
+            this.Watcher.NotifyFilter = NotifyFilters.LastWrite;
+            this.Watcher.Changed += WatchSaveFile_HandleChange;
+            this.Watcher.EnableRaisingEvents = true;
+        }
+        void WatchSaveFile_HandleChange(object sender, FileSystemEventArgs e)
+        {
+            if (this.Board.Sync(false) == SyncStatus.LOAD_OK)
+                this.Graphics.Invalidate();
         }
     }
 }

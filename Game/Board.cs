@@ -4,10 +4,19 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using System.Threading;
 
 namespace RuneWarz.Game
 {
+    enum SyncStatus
+    {
+        NO_OP,
+        LOAD_OK,
+        LOAD_ERR,
+        SAVE_OK,
+        SAVE_ERR
+    }
+
     class Board
     {
         public int Width { get; private set; }
@@ -16,7 +25,7 @@ namespace RuneWarz.Game
         public Player[] Players { get; private set; }
         public Tile[] GameTiles { get; private set; }
 
-        const string Filename = "RuneWarz.sync";
+        public const string Filename = "RuneWarz.sync";
         DateTime LastWrite;
 
         /// <summary>
@@ -59,7 +68,7 @@ namespace RuneWarz.Game
             else
                 return new Board();
         }
-        Board(bool sync) { if (sync) { Sync(); } }
+        Board(bool sync) { if (sync) { Sync(false); } }
 
         /// <summary>Get tile at position</summary>
         /// <param name="x">X coordinate on the board</param>
@@ -166,16 +175,25 @@ namespace RuneWarz.Game
             this.NumPlayers++;
         }
 
-        public void Sync()
+        /// <summary>
+        /// Sync game state with the savefile
+        /// </summary>
+        /// <param name="DoSave">Should we attempt to save if savefile is not new?</param>
+        /// <return> See SyncStatus </return>
+        public SyncStatus Sync(Boolean DoSave)
         {
             DateTime LastWrite = File.GetLastWriteTimeUtc(Filename);
             if (this.GameTiles == null || this.LastWrite == null || this.LastWrite < LastWrite)
-                Sync_Load();
+                return Sync_Load(3) == 0 ? SyncStatus.LOAD_OK : SyncStatus.LOAD_ERR;
+            else if (DoSave)
+                return Sync_Save() == 0 ? SyncStatus.SAVE_OK : SyncStatus.SAVE_ERR;
             else
-                Sync_Save();
+                return SyncStatus.NO_OP;
         }
-        void Sync_Save()
+        int Sync_Save()
         {
+            Console.WriteLine("SAVE");
+            this.LastWrite = DateTime.MaxValue; // Block Sync_Load 
             using (FileStream FStream = File.Open(Filename, FileMode.Create))
             using (StreamWriter WStream = new StreamWriter(FStream, Encoding.ASCII))
             {
@@ -183,16 +201,28 @@ namespace RuneWarz.Game
                 WStream.Write(Sync_BoardToString());
             }
             this.LastWrite = File.GetLastWriteTimeUtc(Filename);
+            return 0;
         }
-        void Sync_Load()
+        int Sync_Load(int tries)
         {
-            using (FileStream FStream = File.OpenRead(Filename))
-            using (StreamReader RStream = new StreamReader(FStream, Encoding.ASCII))
+            try
             {
-                Sync_StringToHeader(RStream.ReadLine());
-                Sync_StringToBoard(RStream.ReadLine());
+                using (FileStream FStream = File.OpenRead(Filename))
+                using (StreamReader RStream = new StreamReader(FStream, Encoding.ASCII))
+                {
+                    Sync_StringToHeader(RStream.ReadLine());
+                    Sync_StringToBoard(RStream.ReadLine());
+                }
+                this.LastWrite = File.GetLastWriteTimeUtc(Filename);
+                return 0;
             }
-            this.LastWrite = File.GetLastWriteTimeUtc(Filename);
+            catch (IOException)
+            {
+                if (tries <= 0)
+                    return 1;
+                System.Threading.Thread.Sleep(100);
+                return Sync_Load(tries - 1);
+            }
         }
 
         /// <summary>
