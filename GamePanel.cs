@@ -96,17 +96,13 @@ namespace RuneWarz
         /// <param name="e"></param>
         void Paint_GamePanel(object sender, PaintEventArgs e)
         {
-            Font Font = new Font("Microsoft Sans Serif", 16, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
-
             Paint_OwnedTiles(e);
             Paint_Score(e);
 
             if (this.Game.GameIsOver)
-                e.Graphics.DrawString("Game over!", Font, Brushes.White, new Point(this.Width / 2 - this.Offset_X, 50));
+                Paint_GameOver(e);
             else if (LastHoverColor != CurrentHoverColor)
                 Paint_Hover(e);
-
-            Font.Dispose();
         }
 
         void Paint_OwnedTiles(PaintEventArgs e)
@@ -140,8 +136,27 @@ namespace RuneWarz
                     e.Graphics.DrawImage(this.Tiles, destination, source, GraphicsUnit.Pixel);
                 }
                 e.Graphics.DrawString(NumTiles.ToString(), Font, Brushes.White, new Point(x + NumTiles + TILESIZE, y));
+                e.Graphics.DrawString((player + 1).ToString(), Font, Brushes.White, new Point(x - 20, y));
             }
 
+            Font.Dispose();
+        }
+        void Paint_GameOver(PaintEventArgs e)
+        {
+            int winner = -1;
+            int best = -1;
+            for (int i = 0; i < this.Game.GetNumPlayers(); ++i)
+            {
+                int current = this.Game.GetNumTilesOfPlayer(i);
+                if (current <= best)
+                    continue;
+                winner = i;
+                best = current;
+            }
+            string WinString = String.Format("Player {0} has won!", winner + 1);
+
+            Font Font = new Font("Microsoft Sans Serif", 16, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
+            e.Graphics.DrawString(WinString, Font, Brushes.White, new Point(this.Width / 2 - WinString.Length*5, 20));
             Font.Dispose();
         }
         void Paint_Hover(PaintEventArgs e)
