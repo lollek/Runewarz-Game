@@ -54,6 +54,8 @@ namespace RuneWarz.Game
                     }
                 }
 
+            CalculatePlayerOwnedTiles();
+
             // Each player automatically captures all nearby tiles of the game color
             for (int player = 0; player < this.NumPlayers; ++player)
                 TryToCapture(player, this.Players[player].Color);
@@ -63,12 +65,14 @@ namespace RuneWarz.Game
 
         public static Board LoadFromState()
         {
-            if (File.Exists(Filename))
-                return new Board(true);
-            else
-                return new Board();
+            return File.Exists(Filename) ? new Board(true) : new Board();
         }
-        Board(bool sync) { if (sync) { Sync(false); } }
+        Board(bool _)
+        {
+            if (!_) // Added a bool to create a unique constructor
+                throw new NotImplementedException();
+            Sync(false);
+        }
 
         /// <summary>Get tile at position</summary>
         /// <param name="x">X coordinate on the board</param>
@@ -133,6 +137,7 @@ namespace RuneWarz.Game
         public bool TryToCapture(int Player, int Color)
         {
             List<Tuple<int, int>> List = GetCapturableTiles(Player, Color);
+            this.Players[Player].NumTiles += List.Count;
             if (List.Count == 0)
                 return false;
 
@@ -149,6 +154,17 @@ namespace RuneWarz.Game
             return true;
         }
 
+        /// <summary>
+        /// Checks the board and calculates how many tiles each player owns
+        /// </summary>
+        void CalculatePlayerOwnedTiles()
+        {
+            int NumBoardTiles = Height * Width;
+            for (int Player = 0; Player < NumPlayers; ++Player)
+                for (int j = 0; j < NumBoardTiles; ++j)
+                    if (this.GameTiles[j] != null && this.GameTiles[j].Owner == Player)
+                        this.Players[Player].NumTiles++;
+        }
 
         /// <summary>
         /// Allocate a new tile on the given coordinate
@@ -192,7 +208,6 @@ namespace RuneWarz.Game
         }
         int Sync_Save()
         {
-            Console.WriteLine("SAVE");
             this.LastWrite = DateTime.MaxValue; // Block Sync_Load 
             using (FileStream FStream = File.Open(Filename, FileMode.Create))
             using (StreamWriter WStream = new StreamWriter(FStream, Encoding.ASCII))
@@ -214,6 +229,7 @@ namespace RuneWarz.Game
                     Sync_StringToBoard(RStream.ReadLine());
                 }
                 this.LastWrite = File.GetLastWriteTimeUtc(Filename);
+                CalculatePlayerOwnedTiles();
                 return 0;
             }
             catch (IOException)

@@ -96,9 +96,21 @@ namespace RuneWarz
         /// <param name="e"></param>
         void Paint_GamePanel(object sender, PaintEventArgs e)
         {
-            Graphics g = e.Graphics;
+            Font Font = new Font("Microsoft Sans Serif", 16, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
 
-            /* First Iteration - Print ownership */
+            Paint_OwnedTiles(e);
+            Paint_Score(e);
+
+            if (this.Game.GameIsOver)
+                e.Graphics.DrawString("Game over!", Font, Brushes.White, new Point(this.Width / 2 - this.Offset_X, 50));
+            else if (LastHoverColor != CurrentHoverColor)
+                Paint_Hover(e);
+
+            Font.Dispose();
+        }
+
+        void Paint_OwnedTiles(PaintEventArgs e)
+        {
             for (int y = 0; y < this.Game.BoardHeight(); ++y)
                 for (int x = 0; x < this.Game.BoardWidth(); ++x)
                 {
@@ -106,30 +118,45 @@ namespace RuneWarz
                     int Owner = Game.GetOwnerOfTile(x, y);
                     Paint_Tile(x, y, Owner == -1 ? TILE_OWNERLESS : TILE_PLAYER1 + Owner, Color, e);
                 }
+        }
+        void Paint_Score(PaintEventArgs e)
+        {
+            int x = 50;
+            int start_y = this.Height - 75;
+            int NumPlayers = this.Game.GetNumPlayers();
+            Font Font = new Font("Microsoft Sans Serif", 10, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
 
-            if (this.Game.GameIsOver)
+            for (int player = 0; player < NumPlayers; ++player)
             {
-                Font Font = new Font("Microsoft Sans Serif", 16, FontStyle.Regular, GraphicsUnit.Point, ((byte)(0)));
-                g.DrawString("Game over!", Font, Brushes.White, new Point(this.Width / 2 - this.Offset_X, 50));
-                Font.Dispose();
-                return;
-            }
-            else if (LastHoverColor == CurrentHoverColor)
-                return;
+                int Color = this.Game.GetColorOfPlayer(player);
+                int NumTiles = this.Game.GetNumTilesOfPlayer(player);
+                int imageType = TILE_PLAYER1 + player;
+                int y = start_y + (player + 1)*TILESIZE;
 
+                for (int xi = 0; xi < NumTiles; ++xi)
+                {
+                    Rectangle source = new Rectangle((Color + 1) * TILESIZE, imageType * TILESIZE, TILESIZE, TILESIZE);
+                    Rectangle destination = new Rectangle(x + xi, y, TILESIZE, TILESIZE);
+                    e.Graphics.DrawImage(this.Tiles, destination, source, GraphicsUnit.Pixel);
+                }
+                e.Graphics.DrawString(NumTiles.ToString(), Font, Brushes.White, new Point(x + NumTiles + TILESIZE, y));
+            }
+
+            Font.Dispose();
+        }
+        void Paint_Hover(PaintEventArgs e)
+        {
             /* Second iteration - Print hover */
             int Print_Tile_Type = TILE_PLAYER1;
             if (this.Game.AnyPlayerHasColor(CurrentHoverColor))
                 Print_Tile_Type = TILE_PADLOCK;
 
-            List<Tuple<int, int>> HoverTiles = this.Game.GetCapturableTiles(this.Game.HumanPlayer(), CurrentHoverColor);
-            for (int i = 0; i < HoverTiles.Count; ++i)
+            foreach (var tile in this.Game.GetCapturableTiles(this.Game.HumanPlayer(), CurrentHoverColor))
             {
-                int x = HoverTiles[i].Item1;
-                int y = HoverTiles[i].Item2;
+                int x = tile.Item1;
+                int y = tile.Item2;
                 Paint_Tile(x, y, Print_Tile_Type, this.Game.GetColorOfTile(x, y), e);
             }
-                
         }
 
         /// <summary>

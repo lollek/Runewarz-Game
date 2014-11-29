@@ -48,13 +48,24 @@ namespace RuneWarz.Game
         public bool AnyPlayerHasColor(int Color) {
             return Board.Players.Any(Player => Player != null && Player.Color == Color);
         }
+        public int GetNumPlayers()
+        {
+            return Board == null ? 0 : Board.NumPlayers;
+        }
+        public int GetNumTilesOfPlayer(int Player)
+        {
+            return this.Board == null ? -1 : this.Board.Players[Player].NumTiles;
+        }
 
+        public int GetColorOfPlayer(int Player)
+        {
+            return this.Board == null ? -1 : this.Board.Players[Player].Color;
+        }
         public int GetColorOfTile(int x, int y)
         {
             Tile tile = this.Board.GetTile(x, y);
             return tile == null ? -1 : tile.Color;
         }
-
         public int GetOwnerOfTile(int x, int y)
         {
             Tile tile = this.Board.GetTile(x, y);

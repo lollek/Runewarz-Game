@@ -12,6 +12,7 @@ namespace RuneWarz.Game
         public const int PLAYER_HUMAN = 0;
 
         public int Color = -1;
+        public int NumTiles = 0;
 
         public Player(int Color)
         {
